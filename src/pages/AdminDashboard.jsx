@@ -62,6 +62,7 @@ export default function AdminDashboard() {
     .slice(0, 10);
 
   const statusChartData = ['Open', 'In Progress', 'Pending', 'Completed'].map(status => ({
+    statusKey: status,
     name: t(status),
     value: tickets.filter(ticket => ticket.status === status).length
   }));
@@ -130,7 +131,7 @@ export default function AdminDashboard() {
                   stroke="white"
                   strokeWidth={2}>
                   {statusChartData.map(status => (
-                    <Cell key={status.name} fill={STATUS_CHART_COLORS[status.name]} />
+                    <Cell key={status.statusKey} fill={STATUS_CHART_COLORS[status.statusKey]} />
                   ))}
                 </Pie>
                 <Tooltip />

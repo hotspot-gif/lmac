@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 const STORAGE_KEY = 'lmac_language';
 
@@ -128,6 +128,10 @@ const pageTextTranslations = {
   'No': 'No',
 };
 
+const italianToEnglish = Object.fromEntries(
+  Object.entries(pageTextTranslations).map(([english, italian]) => [italian, english])
+);
+
 const translations = {
   en: {
     language: 'Language',
@@ -203,10 +207,44 @@ const LanguageContext = createContext(null);
 
 export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState(() => localStorage.getItem(STORAGE_KEY) || 'en');
+  const originalText = useRef(new WeakMap());
+  const originalAttributes = useRef(new WeakMap());
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, language);
     document.documentElement.lang = language;
+
+    const translatePage = () => {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) {
+        const current = node.nodeValue;
+        const source = originalText.current.get(node) || italianToEnglish[current.trim()] || current;
+        originalText.current.set(node, source);
+        const trimmed = source.trim();
+        const translated = language === 'it' ? (pageTextTranslations[trimmed] || trimmed) : trimmed;
+        const leading = source.slice(0, source.length - source.trimStart().length);
+        const trailing = source.slice(source.trimEnd().length);
+        const nextValue = `${leading}${translated}${trailing}`;
+        if (current !== nextValue) node.nodeValue = nextValue;
+      }
+
+      document.querySelectorAll('input, textarea').forEach((element) => {
+        ['placeholder', 'aria-label'].forEach((attribute) => {
+          if (!element.hasAttribute(attribute)) return;
+          const current = element.getAttribute(attribute);
+          const stored = originalAttributes.current.get(element)?.[attribute];
+          const source = stored || italianToEnglish[current] || current;
+          originalAttributes.current.set(element, { ...originalAttributes.current.get(element), [attribute]: source });
+          element.setAttribute(attribute, language === 'it' ? (pageTextTranslations[source] || source) : source);
+        });
+      });
+    };
+
+    translatePage();
+    const observer = new MutationObserver(translatePage);
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
   }, [language]);
 
   const translate = (key, values = {}) => {

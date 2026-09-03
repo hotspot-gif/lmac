@@ -55,6 +55,7 @@ export default function Dashboard() {
     highUrgency: tickets.filter(t => t.urgency === 'Many Customers' || t.urgency === 'Few Customers').length,
   };
   const statusChartData = ['Open', 'In Progress', 'Pending', 'Completed'].map(status => ({
+    statusKey: status,
     name: t(status),
     value: tickets.filter(ticket => ticket.status === status).length
   }));
@@ -115,7 +116,7 @@ export default function Dashboard() {
               <Tooltip />
               <Bar dataKey="value" radius={[5, 5, 0, 0]}>
                 {statusChartData.map(status => (
-                  <Cell key={status.name} fill={STATUS_CHART_COLORS[status.name]} />
+                  <Cell key={status.statusKey} fill={STATUS_CHART_COLORS[status.statusKey]} />
                 ))}
               </Bar>
             </BarChart>
