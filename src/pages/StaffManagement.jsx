@@ -14,6 +14,7 @@ import {
 } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { ADMIN_ROLES, STANDARD_ROLES } from '@/lib/categories';
+import { toast } from '@/components/ui/use-toast';
 import {
   Loader2, Search, UserPlus, Pencil, Power, PowerOff, Users, Mail
 } from 'lucide-react';
@@ -72,6 +73,14 @@ export default function StaffManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.role) {
+      toast({
+        title: 'Role required',
+        description: 'Select a role before adding the staff member.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setFormLoading(true);
     try {
       if (editing) {
@@ -103,8 +112,14 @@ export default function StaffManagement() {
       await loadStaff();
     } catch (err) {
       console.error(err);
+      toast({
+        title: editing ? 'Unable to update staff member' : 'Unable to add staff member',
+        description: err.message || 'Please check the details and try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setFormLoading(false);
     }
-    setFormLoading(false);
   };
 
   const toggleActive = async (s) => {

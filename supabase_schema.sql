@@ -320,9 +320,10 @@ begin
     end if;
 
     insert into auth.users (
-        id, aud, role, email, encrypted_password, email_confirmed_at,
+        instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
         raw_app_meta_data, raw_user_meta_data, created_at, updated_at
     ) values (
+        (select id from auth.instances limit 1),
         gen_random_uuid(),
         'authenticated',
         'authenticated',
@@ -499,9 +500,10 @@ begin
 
     if v_id is null then
         insert into auth.users (
-            id, aud, role, email, encrypted_password, email_confirmed_at,
+            instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
             raw_app_meta_data, raw_user_meta_data, created_at, updated_at
         ) values (
+            (select id from auth.instances limit 1),
             gen_random_uuid(),
             'authenticated',
             'authenticated',
