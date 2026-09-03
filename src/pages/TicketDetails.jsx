@@ -129,6 +129,27 @@ export default function TicketDetails() {
     setActionLoading(false);
   };
 
+  const handleAnswerAndStatus = async () => {
+    if (!response.trim()) return;
+    setActionLoading(true);
+    setError('');
+    try {
+      const statusChanged = newStatus !== ticket.status;
+      if (statusChanged) {
+        const updateData = { status: newStatus };
+        if (newStatus === 'Completed') updateData.completed_at = new Date().toISOString();
+        await db.entities.Ticket.update(id, updateData);
+      }
+      await recordUpdate(statusChanged ? 'status_change' : 'response', response.trim(), statusChanged ? ticket.status : null, statusChanged ? newStatus : null);
+      if (statusChanged) await notifyReporter(ticket, ticket.status, newStatus);
+      setResponse('');
+      await loadTicket();
+    } catch {
+      setError('Failed to submit answer and status.');
+    }
+    setActionLoading(false);
+  };
+
   const handleComplete = async () => {
     setActionLoading(true);
     setError('');
@@ -259,6 +280,12 @@ export default function TicketDetails() {
                 className="flex-1 rounded-xl bg-foreground hover:bg-foreground/90 text-white">
                 
                   <MessageSquare className="w-4 h-4 mr-1.5" /> Post Response
+                </Button>
+                <Button
+                onClick={handleAnswerAndStatus}
+                disabled={actionLoading || !response.trim()}
+                className="flex-1 rounded-xl bg-[#245bc1] hover:bg-[#245bc1]/90 text-white">
+                  <Save className="w-4 h-4 mr-1.5" /> Submit Answer &amp; Status
                 </Button>
                 {ticket.status !== 'Completed' &&
               <Button
