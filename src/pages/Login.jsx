@@ -72,10 +72,9 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-28 h-28 mb-2">
+          <div className="inline-flex items-center justify-center w-40 h-40 mb-2">
             <img src={logo} alt="Lyca Ops" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-[hsl(var(--primary))]">Lyca Ops</h1>
           <p className="text-sm text-foreground/60 mt-1">Market Assistance Center</p>
         </div>
 
@@ -169,7 +168,7 @@ export default function Login() {
           </div>
         </Card>
 
-        <p className="text-center text-xs text-foreground/40 mt-6">Authorized personnel only. Contact your administrator for access. Power by Lyca Ops
+        <p className="text-center text-xs text-foreground/40 mt-6">Authorized personnel only. Contact your administrator for access.
 
         </p>
       </div>
