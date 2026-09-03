@@ -221,6 +221,18 @@ export default function TicketDetails() {
             <InfoItem label="Created" value={formatDateTime(ticket.created_date)} />
             <InfoItem label="Last Updated" value={formatDateTime(ticket.updated_date)} />
           </div>
+          {getMsisdns(ticket.msisdns).length > 0 && (
+            <div className="mt-4 pt-4 border-t border-foreground/8">
+              <p className="text-xs text-foreground/50 mb-2">MSISDN Details</p>
+              <div className="flex flex-wrap gap-2">
+                {getMsisdns(ticket.msisdns).map((msisdn, index) => (
+                  <span key={`${msisdn}-${index}`} className="inline-flex items-center rounded-lg bg-[#245bc1]/10 px-3 py-1.5 text-sm font-mono font-semibold text-[#245bc1]">
+                    {msisdn}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="mt-4 pt-4 border-t border-foreground/8">
             <p className="text-xs text-foreground/50 mb-1">Description</p>
             <p className="text-sm text-foreground/80 whitespace-pre-wrap">{ticket.description}</p>
@@ -351,4 +363,10 @@ function InfoItem({ label, value }) {
       <p className="text-sm font-medium text-foreground break-words">{value || '—'}</p>
     </div>);
 
+}
+
+function getMsisdns(msisdns) {
+  if (Array.isArray(msisdns)) return msisdns.filter(Boolean);
+  if (typeof msisdns === 'string' && msisdns.trim()) return [msisdns.trim()];
+  return [];
 }
