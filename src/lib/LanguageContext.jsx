@@ -43,6 +43,8 @@ const pageTextTranslations = {
   'My Cases by Status': 'I miei casi per stato',
   'My Reported Cases': 'I miei casi segnalati',
   'No tickets reported yet': 'Nessun ticket segnalato',
+  'Click "Report an Issue" to create your first ticket.': 'Fai clic su "Segnala un problema" per creare il tuo primo ticket.',
+  'total tickets submitted': 'ticket totali inviati',
   'Forgot Password': 'Password dimenticata',
   'Reset password': 'Reimposta password',
   'Back to log in': 'Torna al login',

@@ -2,6 +2,7 @@ import { db } from '@/api/db';
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCustomAuth } from '@/lib/customAuth';
+import { useLanguage } from '@/lib/LanguageContext';
 
 import StatCard from '@/components/StatCard';
 import StatusBadge from '@/components/StatusBadge';
@@ -19,6 +20,7 @@ const STATUS_CHART_COLORS = {
 
 export default function AdminDashboard() {
   const { currentUser, isAdmin } = useCustomAuth();
+  const { t } = useLanguage();
   const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -60,7 +62,7 @@ export default function AdminDashboard() {
     .slice(0, 10);
 
   const statusChartData = ['Open', 'In Progress', 'Pending', 'Completed'].map(status => ({
-    name: status,
+    name: t(status),
     value: tickets.filter(ticket => ticket.status === status).length
   }));
   const completedPercentage = stats.total === 0 ? 0 : Math.round(stats.completed / stats.total * 100);
@@ -81,8 +83,8 @@ export default function AdminDashboard() {
     <div className="space-y-6">
       {/* Welcome Header */}
       <div className="bg-gradient-to-br from-foreground to-foreground rounded-2xl p-5 sm:p-6 text-white shadow-lg shadow-foreground/10">
-        <p className="text-accent text-sm font-medium mb-1">Welcome back</p>
-        <h1 className="text-2xl sm:text-3xl font-bold mb-1">Hello, {currentUser?.full_name}</h1>
+        <p className="text-accent text-sm font-medium mb-1">{t('Welcome back')}</p>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1">{t('hello', { name: currentUser?.full_name })}</h1>
         <div className="flex flex-wrap gap-2 mt-3">
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/10">
             {currentUser?.role}
@@ -98,21 +100,21 @@ export default function AdminDashboard() {
 
       {/* Summary Cards */}
       <div>
-        <h2 className="text-lg font-bold text-foreground mb-3">Pending Cases Summary</h2>
+        <h2 className="text-lg font-bold text-foreground mb-3">{t('Pending Cases Summary')}</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 xl:grid-cols-7 gap-3 sm:gap-4">
-          <StatCard label="Total Tickets" value={stats.total} icon={FileText} color="bg-foreground/5" textColor="text-foreground" />
-          <StatCard label="Open" value={stats.open} icon={Inbox} color="bg-[#245bc1]/10" textColor="text-[#245bc1]" />
-          <StatCard label="In Progress" value={stats.inProgress} icon={Clock} color="bg-[#00D7FF]/10" textColor="text-[#00a7cc]" />
-          <StatCard label="Pending" value={stats.pending} icon={Clock} color="bg-accent/15" textColor="text-secondary" />
-          <StatCard label="Completed" value={stats.completed} icon={CheckCircle2} color="bg-[#08dc7d]/10" textColor="text-[#06a85e]" />
-          <StatCard label="Service Impact" value={stats.serviceImpact} icon={AlertOctagon} color="bg-primary/10" textColor="text-primary" />
-          <StatCard label="Many Customers" value={stats.manyCustomers} icon={AlertTriangle} color="bg-destructive/30" textColor="text-destructive-foreground" />
+          <StatCard label={t('Total Tickets')} value={stats.total} icon={FileText} color="bg-foreground/5" textColor="text-foreground" />
+          <StatCard label={t('Open')} value={stats.open} icon={Inbox} color="bg-[#245bc1]/10" textColor="text-[#245bc1]" />
+          <StatCard label={t('In Progress')} value={stats.inProgress} icon={Clock} color="bg-[#00D7FF]/10" textColor="text-[#00a7cc]" />
+          <StatCard label={t('Pending')} value={stats.pending} icon={Clock} color="bg-accent/15" textColor="text-secondary" />
+          <StatCard label={t('Completed')} value={stats.completed} icon={CheckCircle2} color="bg-[#08dc7d]/10" textColor="text-[#06a85e]" />
+          <StatCard label={t('Service Impact')} value={stats.serviceImpact} icon={AlertOctagon} color="bg-primary/10" textColor="text-primary" />
+          <StatCard label={t('Many Customers')} value={stats.manyCustomers} icon={AlertTriangle} color="bg-destructive/30" textColor="text-destructive-foreground" />
         </div>
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <div className="bg-white rounded-2xl border border-foreground/8 p-4 sm:p-5">
-          <h2 className="text-lg font-bold text-foreground mb-4">Cases by Status</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">{t('Cases by Status')}</h2>
           <div className="h-64 relative">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
@@ -136,13 +138,13 @@ export default function AdminDashboard() {
             </ResponsiveContainer>
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <span className="text-3xl font-bold text-foreground">{completedPercentage}%</span>
-              <span className="text-xs text-foreground/50">Complete</span>
+              <span className="text-xs text-foreground/50">{t('Completed')}</span>
             </div>
           </div>
-          <p className="text-center text-xs text-foreground/50">{stats.total.toLocaleString()} total tickets submitted</p>
+          <p className="text-center text-xs text-foreground/50">{stats.total.toLocaleString()} {t('total tickets submitted')}</p>
         </div>
         <div className="bg-white rounded-2xl border border-foreground/8 p-4 sm:p-5">
-          <h2 className="text-lg font-bold text-foreground mb-4">Top Categories</h2>
+          <h2 className="text-lg font-bold text-foreground mb-4">{t('Top Categories')}</h2>
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
