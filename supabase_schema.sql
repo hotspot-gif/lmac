@@ -153,7 +153,7 @@ begin
     -- Serialize concurrent generations per year to avoid duplicates
     perform pg_advisory_xact_lock(hashtext('lmac_ticket_number_' || v_year));
 
-    select coalesce(max((substring(t.ticket_number from 9 for 6))::int), 0) + 1
+    select coalesce(max((substring(t.ticket_number from 10 for 6))::int), 0) + 1
       into v_next
       from public.tickets t
      where t.ticket_number like 'INC-' || v_year || '-%';

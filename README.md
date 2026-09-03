@@ -90,6 +90,8 @@ vercel --prod
 
 Do not run [`supabase_migration_admin_password.sql`](./supabase_migration_admin_password.sql) for this setup. It is retained as a legacy reference; rerun [`supabase_schema.sql`](./supabase_schema.sql) when a clean rebuild is required.
 
+If the database was created before the ticket-number fix, run [`supabase_migration_ticket_number.sql`](./supabase_migration_ticket_number.sql) once in the Supabase SQL Editor.
+
 ### Step 5 — Create the remaining staff accounts
 Sign in as an administrator and use **Staff Management** to add users. The administrator chooses each user's initial password. Editing a user's mobile number still resets their password to the new number. Alternatively, add more `seed_staff()` calls at the bottom of `supabase_schema.sql` and re-run them in the SQL editor.
 

@@ -46,22 +46,13 @@ export default function ReportIssue() {
     return Object.keys(e).length === 0;
   };
 
-  const generateTicketNumber = async () => {
-    const year = new Date().getFullYear();
-    const all = await db.entities.Ticket.list('-created_date', 1000);
-    const yearTickets = (all || []).filter(t => t.ticket_number?.includes(`INC-${year}-`));
-    const next = yearTickets.length + 1;
-    return `INC-${year}-${String(next).padStart(6, '0')}`;
-  };
-
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!validate()) return;
     setSubmitting(true);
     try {
-      const ticketNumber = await generateTicketNumber();
       const createdTicket = await db.entities.Ticket.create({
-        ticket_number: ticketNumber,
+        ticket_number: null,
         reporter_id: currentUser.id,
         reporter_name: currentUser.full_name,
         reporter_email: currentUser.corporate_email,
@@ -87,7 +78,7 @@ export default function ReportIssue() {
       });
       // The DB trigger guarantees a unique ticket number even when two users
       // report issues at the same time — always show the stored value.
-      setSuccess(createdTicket.ticket_number || ticketNumber);
+      setSuccess(createdTicket.ticket_number);
     } catch (err) {
       setErrors({ submit: 'Failed to submit ticket. Please try again.' });
     }
