@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { AlertCircle, ArrowRight, ArrowLeft, Shield, Mail, Lock, Loader2 } from 'lucide-react';
+import logo from '@/Public/logo.svg';
+import { AlertCircle, ArrowRight, ArrowLeft, Mail, Lock, Loader2 } from 'lucide-react';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -71,10 +72,10 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-foreground mb-4 shadow-lg shadow-foreground/20">
-            <Shield className="w-8 h-8 text-[hsl(var(--primary-foreground))]" />
+          <div className="inline-flex items-center justify-center w-28 h-28 mb-2">
+            <img src={logo} alt="Lyca Ops" className="w-full h-full object-contain" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-[hsl(var(--primary))]">LMAC</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-[hsl(var(--primary))]">Lyca Ops</h1>
           <p className="text-sm text-foreground/60 mt-1">Market Assistance Center</p>
         </div>
 

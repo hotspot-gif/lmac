@@ -3,9 +3,10 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useCustomAuth } from '@/lib/customAuth';
 import {
   LayoutDashboard, PlusCircle, ListChecks, Users, Clock, CheckCircle,
-  User, LogOut, Menu, X, Shield } from
+  User, LogOut, Menu, X } from
 'lucide-react';
 import NotificationBar from '@/components/NotificationBar';
+import logo from '@/Public/logo.svg';
 
 const NAV_ITEMS = {
   standard: [
@@ -46,8 +47,8 @@ export default function Layout({ children }) {
   <div className="flex flex-col h-full">
       <div className="px-5 py-5 border-b border-white/10">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-[hsl(var(--sidebar-ring))]">
-            <Shield className="w-5 h-5 text-foreground" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 bg-white">
+            <img src={logo} alt="Lyca Ops" className="w-9 h-9 object-contain" />
           </div>
           <div className="min-w-0">
             <p className="text-white font-bold text-sm leading-tight truncate">LMAC - Lyca Ops</p>
@@ -111,7 +112,7 @@ export default function Layout({ children }) {
       {/* Mobile Top Bar */}
       <header className="lg:hidden fixed top-0 inset-x-0 bg-foreground z-30 px-4 h-14 flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Shield className="w-5 h-5 text-accent" />
+          <img src={logo} alt="Lyca Ops" className="w-7 h-7 object-contain" />
           <span className="text-white font-bold text-sm">Market Assistance Center</span>
         </div>
         <button

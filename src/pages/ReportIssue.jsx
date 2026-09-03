@@ -36,15 +36,10 @@ export default function ReportIssue() {
     if (!form.description.trim()) e.description = 'Description is required.';
     if (form.description.length > MAX_DESC) e.description = `Description must be ${MAX_DESC} characters or fewer.`;
     if (form.urgency && form.urgency !== 'No Customer Impact') {
-      const isMobileNetwork = MOBILE_NETWORK_CATEGORIES.includes(form.category);
-      if (form.urgency === 'Single customers') {
-        if (isMobileNetwork) {
-          const validMsisdns = form.msisdns.filter(m => m.trim());
-          if (validMsisdns.length === 0) e.msisdns = 'At least one MSISDN is required.';
-        }
-      } else {
-        const validMsisdns = form.msisdns.filter(m => m.trim());
-        if (validMsisdns.length === 0) e.msisdns = 'At least one MSISDN is required.';
+      const validMsisdns = form.msisdns.filter(m => m.trim());
+      const requiresMsisdn = MOBILE_NETWORK_CATEGORIES.includes(form.category) || form.urgency !== 'Single customers';
+      if (requiresMsisdn && validMsisdns.length === 0) {
+        e.msisdns = 'At least one MSISDN is required.';
       }
     }
     setErrors(e);
@@ -138,8 +133,9 @@ export default function ReportIssue() {
   }
 
   const isSingleCustomer = form.urgency === 'Single customers';
+  const isMobileNetworkQuery = MOBILE_NETWORK_CATEGORIES.includes(form.category);
   const showMsisdns = form.urgency && form.urgency !== 'No Customer Impact' &&
-    (!isSingleCustomer || MOBILE_NETWORK_CATEGORIES.includes(form.category));
+    (!isSingleCustomer || isMobileNetworkQuery);
   const msisdnMax = isSingleCustomer ? 1 : MAX_MSISDNS;
 
   return (

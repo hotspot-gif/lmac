@@ -7,6 +7,7 @@ import { Bell, RefreshCw, MessageSquare, CheckCircle2, X } from 'lucide-react';
 import { formatDateTime } from '@/lib/authUtils';
 
 const seenKey = (userId) => `mirt_notif_seen_${userId}`;
+const clearedKey = (userId) => `mirt_notif_cleared_${userId}`;
 
 export default function NotificationBar() {
   const { currentUser, isAdmin } = useCustomAuth();
@@ -15,17 +16,20 @@ export default function NotificationBar() {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [lastSeenDate, setLastSeenDate] = useState(null);
+  const [clearedThrough, setClearedThrough] = useState(null);
   const loadedRef = useRef(false);
 
   useEffect(() => {
     if (currentUser?.id) {
       setLastSeenDate(localStorage.getItem(seenKey(currentUser.id)) || null);
+      setClearedThrough(localStorage.getItem(clearedKey(currentUser.id)) || null);
     }
   }, [currentUser?.id]);
 
   useEffect(() => {
+    if (!currentUser?.id) return;
     loadNotifications();
-  }, []);
+  }, [currentUser?.id, isAdmin, clearedThrough]);
 
   const loadNotifications = async () => {
     try {
@@ -42,7 +46,10 @@ export default function NotificationBar() {
         const myTicketIds = new Set((allTickets || []).filter(t => t.reporter_id === currentUser.id).map(t => t.id));
         relevant = relevant.filter(u => myTicketIds.has(u.ticket_id));
       }
-      setNotifications(relevant.slice(0, 20).map(u => ({ ...u, ticket: ticketMap.get(u.ticket_id) })));
+      setNotifications(relevant
+        .filter(u => !clearedThrough || u.created_date > clearedThrough)
+        .slice(0, 20)
+        .map(u => ({ ...u, ticket: ticketMap.get(u.ticket_id) })));
     } catch (e) {
       console.error(e);
     }
@@ -50,6 +57,7 @@ export default function NotificationBar() {
   };
 
   const unreadCount = notifications.filter(n => !lastSeenDate || n.created_date > lastSeenDate).length;
+  const readNotifications = notifications.filter(n => lastSeenDate && n.created_date <= lastSeenDate);
 
   const handleToggle = () => {
     const newOpen = !open;
@@ -59,6 +67,17 @@ export default function NotificationBar() {
       setLastSeenDate(latest);
       localStorage.setItem(seenKey(currentUser.id), latest);
     }
+  };
+
+  const handleClearRead = () => {
+    if (!currentUser?.id || readNotifications.length === 0) return;
+    const latestRead = readNotifications.reduce((latest, notification) =>
+      notification.created_date > latest ? notification.created_date : latest,
+      readNotifications[0].created_date
+    );
+    setClearedThrough(latestRead);
+    localStorage.setItem(clearedKey(currentUser.id), latestRead);
+    setNotifications(notifications.filter(n => n.created_date > latestRead));
   };
 
   const getIcon = (type) => {
@@ -104,9 +123,19 @@ export default function NotificationBar() {
           <div className="absolute right-0 mt-2 w-80 sm:w-96 max-h-96 overflow-y-auto rounded-xl bg-white border border-foreground/10 shadow-xl z-50">
             <div className="sticky top-0 bg-foreground px-4 py-3 flex items-center justify-between">
               <h3 className="text-white font-bold text-sm">Notifications</h3>
-              <button onClick={() => setOpen(false)} className="text-white/60 hover:text-white">
-                <X className="w-4 h-4" />
-              </button>
+              <div className="flex items-center gap-2">
+                {readNotifications.length > 0 && (
+                  <button
+                    onClick={handleClearRead}
+                    className="text-xs text-white/70 hover:text-white"
+                  >
+                    Clear read
+                  </button>
+                )}
+                <button onClick={() => setOpen(false)} className="text-white/60 hover:text-white">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
             </div>
             {loading ? (
               <div className="p-8 text-center text-sm text-foreground/50">Loading...</div>
