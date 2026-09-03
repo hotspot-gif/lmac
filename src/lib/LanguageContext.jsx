@@ -222,7 +222,9 @@ export function LanguageProvider({ children }) {
         const source = originalText.current.get(node) || italianToEnglish[current.trim()] || current;
         originalText.current.set(node, source);
         const trimmed = source.trim();
-        const translated = language === 'it' ? (pageTextTranslations[trimmed] || trimmed) : trimmed;
+        const translated = language === 'it'
+          ? (pageTextTranslations[trimmed] || (trimmed.startsWith('Hello, ') ? `Ciao, ${trimmed.slice(7)}` : trimmed))
+          : trimmed;
         const leading = source.slice(0, source.length - source.trimStart().length);
         const trailing = source.slice(source.trimEnd().length);
         const nextValue = `${leading}${translated}${trailing}`;

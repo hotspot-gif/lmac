@@ -20,7 +20,7 @@ const STATUS_CHART_COLORS = {
 
 export default function AdminDashboard() {
   const { currentUser, isAdmin } = useCustomAuth();
-  const { t } = useLanguage();
+  const { language, t } = useLanguage();
   const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,7 +85,9 @@ export default function AdminDashboard() {
       {/* Welcome Header */}
       <div className="bg-gradient-to-br from-foreground to-foreground rounded-2xl p-5 sm:p-6 text-white shadow-lg shadow-foreground/10">
         <p className="text-accent text-sm font-medium mb-1">{t('Welcome back')}</p>
-        <h1 className="text-2xl sm:text-3xl font-bold mb-1">{t('hello', { name: currentUser?.full_name })}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1">
+          {language === 'it' ? 'Ciao' : 'Hello'}, {currentUser?.full_name}
+        </h1>
         <div className="flex flex-wrap gap-2 mt-3">
           <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-white/10">
             {currentUser?.role}
