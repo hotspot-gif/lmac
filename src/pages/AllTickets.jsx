@@ -23,7 +23,7 @@ export default function AllTickets() {
   const [search, setSearch] = useState('');
   const [filters, setFilters] = useState({
     status: 'all', category: 'all', subCategory: 'all', role: 'all',
-    territory: 'all', impact: 'all', urgency: 'all'
+    branch: 'all', impact: 'all', urgency: 'all'
   });
   const [showFilters, setShowFilters] = useState(false);
 
@@ -62,16 +62,16 @@ export default function AllTickets() {
     const matchCategory = filters.category === 'all' || t.category === filters.category;
     const matchSubCategory = filters.subCategory === 'all' || t.sub_category === filters.subCategory;
     const matchRole = filters.role === 'all' || t.reporter_role === filters.role;
-    const matchTerritory = filters.territory === 'all' || t.reporter_territory === filters.territory;
+    const matchBranch = filters.branch === 'all' || t.reporter_territory === filters.branch;
     const matchImpact = filters.impact === 'all' || t.impact === filters.impact;
     const matchUrgency = filters.urgency === 'all' || t.urgency === filters.urgency;
-    return matchSearch && matchStatus && matchCategory && matchSubCategory && matchRole && matchTerritory && matchImpact && matchUrgency;
+    return matchSearch && matchStatus && matchCategory && matchSubCategory && matchRole && matchBranch && matchImpact && matchUrgency;
   });
 
   const activeFilterCount = Object.values(filters).filter(v => v !== 'all').length;
 
   const clearFilters = () => {
-    setFilters({ status: 'all', category: 'all', subCategory: 'all', role: 'all', territory: 'all', impact: 'all', urgency: 'all' });
+    setFilters({ status: 'all', category: 'all', subCategory: 'all', role: 'all', branch: 'all', impact: 'all', urgency: 'all' });
   };
 
   if (loading) {
@@ -129,7 +129,7 @@ export default function AllTickets() {
             )}
             <FilterSelect label="Role" value={filters.role} onChange={(v) => setFilters({ ...filters, role: v })}
               options={roles} />
-            <FilterSelect label="Territory" value={filters.territory} onChange={(v) => setFilters({ ...filters, territory: v })}
+            <FilterSelect label="Branch" value={filters.branch} onChange={(v) => setFilters({ ...filters, branch: v })}
               options={territories} />
             <FilterSelect label="Impact" value={filters.impact} onChange={(v) => setFilters({ ...filters, impact: v })}
               options={IMPACT_OPTIONS} />

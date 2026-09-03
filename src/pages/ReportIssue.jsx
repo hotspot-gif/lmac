@@ -6,7 +6,7 @@ import { useCustomAuth } from '@/lib/customAuth';
 import { IMPACT_OPTIONS, URGENCY_OPTIONS, MOBILE_NETWORK_CATEGORIES } from '@/lib/categories';
 import CategorySelect from '@/components/CategorySelect';
 import DropdownSelect from '@/components/DropdownSelect';
-import MsisdnInput, { MAX_MSISDNS } from '@/components/MsisdnInput';
+import MsisdnInput, { MAX_MSISDNS, isValidMsisdn } from '@/components/MsisdnInput';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -20,7 +20,7 @@ export default function ReportIssue() {
   const { currentUser } = useCustomAuth();
   const navigate = useNavigate();
   const [form, setForm] = useState({
-    category: '', subCategory: '', impact: '', urgency: '', subject: '', description: '', msisdns: ['']
+    category: '', subCategory: '', impact: '', urgency: '', subject: '', description: '', msisdns: ['39 ']
   });
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
@@ -36,7 +36,7 @@ export default function ReportIssue() {
     if (!form.description.trim()) e.description = 'Description is required.';
     if (form.description.length > MAX_DESC) e.description = `Description must be ${MAX_DESC} characters or fewer.`;
     if (form.urgency && form.urgency !== 'No Customer Impact') {
-      const validMsisdns = form.msisdns.filter(m => m.trim());
+      const validMsisdns = form.msisdns.filter(isValidMsisdn);
       const requiresMsisdn = MOBILE_NETWORK_CATEGORIES.includes(form.category) || form.urgency !== 'Single customers';
       if (requiresMsisdn && validMsisdns.length === 0) {
         e.msisdns = 'At least one MSISDN is required.';
@@ -74,7 +74,7 @@ export default function ReportIssue() {
         urgency: form.urgency,
         subject: form.subject.trim(),
         description: form.description.trim(),
-        msisdns: showMsisdns ? form.msisdns.filter(m => m.trim()).slice(0, msisdnMax) : [],
+        msisdns: showMsisdns ? form.msisdns.filter(isValidMsisdn).slice(0, msisdnMax) : [],
         status: 'Open',
       });
       await db.entities.TicketUpdate.create({
@@ -119,7 +119,7 @@ export default function ReportIssue() {
             <Button
               onClick={() => {
                 setSuccess(null);
-                setForm({ category: '', subCategory: '', impact: '', urgency: '', subject: '', description: '', msisdns: [''] });
+                setForm({ category: '', subCategory: '', impact: '', urgency: '', subject: '', description: '', msisdns: ['39 '] });
               }}
               variant="outline"
               className="flex-1 rounded-xl border-foreground/15 text-foreground"

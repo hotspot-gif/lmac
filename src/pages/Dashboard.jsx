@@ -7,6 +7,7 @@ import StatCard from '@/components/StatCard';
 import TicketCard from '@/components/TicketCard';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Inbox, Clock, AlertOctagon, CheckCircle2, Loader2, FileText } from 'lucide-react';
+import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 export default function Dashboard() {
   const { currentUser, isAdmin } = useCustomAuth();
@@ -44,6 +45,10 @@ export default function Dashboard() {
     completed: tickets.filter(t => t.status === 'Completed').length,
     highUrgency: tickets.filter(t => t.urgency === 'Many Customers' || t.urgency === 'Few Customers').length,
   };
+  const statusChartData = ['Open', 'In Progress', 'Pending', 'Completed'].map(status => ({
+    name: status,
+    value: tickets.filter(ticket => ticket.status === status).length
+  }));
 
   if (loading) {
     return (
@@ -88,6 +93,21 @@ export default function Dashboard() {
         <StatCard label="Pending" value={stats.pending} icon={Clock} color="bg-accent/15" textColor="text-secondary" />
         <StatCard label="Completed" value={stats.completed} icon={CheckCircle2} color="bg-[#08dc7d]/10" textColor="text-[#06a85e]" />
         <StatCard label="High Urgency" value={stats.highUrgency} icon={AlertOctagon} color="bg-primary/10" textColor="text-primary" />
+      </div>
+
+      <div className="bg-white rounded-2xl border border-foreground/8 p-4 sm:p-5">
+        <h2 className="text-lg font-bold text-foreground mb-4">My Cases by Status</h2>
+        <div className="h-56">
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={statusChartData} margin={{ top: 8, right: 8, left: -20, bottom: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+              <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+              <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+              <Tooltip />
+              <Bar dataKey="value" fill="#245bc1" radius={[5, 5, 0, 0]} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
       </div>
 
       {/* Recent Tickets */}

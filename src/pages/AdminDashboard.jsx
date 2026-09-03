@@ -8,6 +8,7 @@ import StatusBadge from '@/components/StatusBadge';
 import UrgencyBadge from '@/components/UrgencyBadge';
 import { formatDate } from '@/lib/authUtils';
 import { FileText, Inbox, Clock, CheckCircle2, AlertOctagon, AlertTriangle, Loader2, ArrowRight } from 'lucide-react';
+import { BarChart, Bar, CartesianGrid, Cell, PieChart, Pie, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 export default function AdminDashboard() {
   const { currentUser, isAdmin } = useCustomAuth();
@@ -51,6 +52,15 @@ export default function AdminDashboard() {
     })
     .slice(0, 10);
 
+  const statusChartData = ['Open', 'In Progress', 'Pending', 'Completed'].map(status => ({
+    name: status,
+    value: tickets.filter(ticket => ticket.status === status).length
+  }));
+  const categoryChartData = [...new Set(tickets.map(ticket => ticket.category).filter(Boolean))]
+    .map(category => ({ name: category, value: tickets.filter(ticket => ticket.category === category).length }))
+    .sort((a, b) => b.value - a.value)
+    .slice(0, 6);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -89,6 +99,36 @@ export default function AdminDashboard() {
           <StatCard label="Completed" value={stats.completed} icon={CheckCircle2} color="bg-[#08dc7d]/10" textColor="text-[#06a85e]" />
           <StatCard label="Service Impact" value={stats.serviceImpact} icon={AlertOctagon} color="bg-primary/10" textColor="text-primary" />
           <StatCard label="Many Customers" value={stats.manyCustomers} icon={AlertTriangle} color="bg-destructive/30" textColor="text-destructive-foreground" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+        <div className="bg-white rounded-2xl border border-foreground/8 p-4 sm:p-5">
+          <h2 className="text-lg font-bold text-foreground mb-4">Cases by Status</h2>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={statusChartData} margin={{ top: 8, right: 8, left: -20, bottom: 8 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
+                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Bar dataKey="value" fill="#245bc1" radius={[5, 5, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+        <div className="bg-white rounded-2xl border border-foreground/8 p-4 sm:p-5">
+          <h2 className="text-lg font-bold text-foreground mb-4">Top Categories</h2>
+          <div className="h-64">
+            <ResponsiveContainer width="100%" height="100%">
+              <PieChart>
+                <Pie data={categoryChartData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={88} label={({ name }) => name}>
+                  {categoryChartData.map((entry, index) => <Cell key={entry.name} fill={['#245bc1', '#08dc7d', '#00a7cc', '#f59e0b', '#ef4444', '#7c3aed'][index]} />)}
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+          </div>
         </div>
       </div>
 
