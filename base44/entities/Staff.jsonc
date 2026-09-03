@@ -1,0 +1,52 @@
+{
+  "name": "Staff",
+  "type": "object",
+  "properties": {
+    "full_name": {
+      "type": "string",
+      "title": "Full Name"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "ASM",
+        "FSE",
+        "HS-ADMIN",
+        "PM-ADMIN",
+        "CS-ADMIN"
+      ],
+      "title": "Role"
+    },
+    "designation": {
+      "type": "string",
+      "title": "Designation"
+    },
+    "corporate_email": {
+      "type": "string",
+      "title": "Corporate Email"
+    },
+    "mobile_number": {
+      "type": "string",
+      "title": "Mobile Number"
+    },
+    "territory": {
+      "type": "string",
+      "title": "Territory"
+    },
+    "password_hash": {
+      "type": "string",
+      "title": "Password Hash"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "title": "Active"
+    }
+  },
+  "required": [
+    "full_name",
+    "role",
+    "corporate_email",
+    "mobile_number"
+  ]
+}

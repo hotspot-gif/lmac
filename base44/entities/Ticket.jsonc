@@ -1,0 +1,103 @@
+{
+  "name": "Ticket",
+  "type": "object",
+  "properties": {
+    "ticket_number": {
+      "type": "string",
+      "title": "Ticket Number"
+    },
+    "reporter_id": {
+      "type": "string",
+      "title": "Reporter ID"
+    },
+    "reporter_name": {
+      "type": "string",
+      "title": "Reporter Name"
+    },
+    "reporter_email": {
+      "type": "string",
+      "title": "Reporter Email"
+    },
+    "reporter_role": {
+      "type": "string",
+      "title": "Reporter Role"
+    },
+    "reporter_designation": {
+      "type": "string",
+      "title": "Reporter Designation"
+    },
+    "reporter_territory": {
+      "type": "string",
+      "title": "Reporter Territory"
+    },
+    "category": {
+      "type": "string",
+      "title": "Category"
+    },
+    "sub_category": {
+      "type": "string",
+      "title": "Sub Category"
+    },
+    "impact": {
+      "type": "string",
+      "enum": [
+        "Telecom/POS/Activations/TopUps/MNP",
+        "Any Other Service",
+        "No Service impact"
+      ],
+      "title": "Impact"
+    },
+    "urgency": {
+      "type": "string",
+      "enum": [
+        "Few Customers",
+        "Many Customers",
+        "No Customer Impact",
+        "Single customers"
+      ],
+      "title": "Urgency"
+    },
+    "subject": {
+      "type": "string",
+      "title": "Subject"
+    },
+    "description": {
+      "type": "string",
+      "title": "Description"
+    },
+    "msisdns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "title": "MSISDNs"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Open",
+        "In Progress",
+        "Pending",
+        "Completed"
+      ],
+      "default": "Open",
+      "title": "Status"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "title": "Completed At"
+    }
+  },
+  "required": [
+    "ticket_number",
+    "reporter_id",
+    "reporter_name",
+    "category",
+    "sub_category",
+    "impact",
+    "urgency",
+    "subject",
+    "description"
+  ]
+}

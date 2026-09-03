@@ -1,0 +1,50 @@
+{
+  "name": "TicketUpdate",
+  "type": "object",
+  "properties": {
+    "ticket_id": {
+      "type": "string",
+      "title": "Ticket ID"
+    },
+    "update_type": {
+      "type": "string",
+      "enum": [
+        "created",
+        "status_change",
+        "response",
+        "completed"
+      ],
+      "title": "Update Type"
+    },
+    "previous_status": {
+      "type": "string",
+      "title": "Previous Status"
+    },
+    "new_status": {
+      "type": "string",
+      "title": "New Status"
+    },
+    "message": {
+      "type": "string",
+      "title": "Message"
+    },
+    "created_by": {
+      "type": "string",
+      "title": "Created By"
+    },
+    "created_by_name": {
+      "type": "string",
+      "title": "Created By Name"
+    },
+    "created_by_role": {
+      "type": "string",
+      "title": "Created By Role"
+    }
+  },
+  "required": [
+    "ticket_id",
+    "update_type",
+    "created_by",
+    "created_by_name"
+  ]
+}
