@@ -78,6 +78,31 @@ $$;
 revoke execute on function public.admin_create_staff(text, text, text, text, text, text, text) from public, anon;
 grant execute on function public.admin_create_staff(text, text, text, text, text, text, text) to authenticated;
 
+-- Backward compatibility for a frontend bundle that has not been redeployed
+-- yet. New clients use the seven-argument function above and an explicit
+-- password; legacy clients temporarily use the mobile number as the password.
+create or replace function public.admin_create_staff(
+    p_full_name       text,
+    p_role            text,
+    p_corporate_email text,
+    p_mobile_number   text,
+    p_designation     text default null,
+    p_territory       text default null
+)
+returns public.staff
+language sql
+security definer
+set search_path = public, extensions
+as $$
+    select public.admin_create_staff(
+        p_full_name, p_role, p_corporate_email, p_mobile_number,
+        p_mobile_number, p_designation, p_territory
+    );
+$$;
+
+revoke execute on function public.admin_create_staff(text, text, text, text, text, text) from public, anon;
+grant execute on function public.admin_create_staff(text, text, text, text, text, text) to authenticated;
+
 -- Optional verification:
 -- select n.nspname, p.proname, pg_get_function_arguments(p.oid)
 -- from pg_proc p join pg_namespace n on n.oid = p.pronamespace

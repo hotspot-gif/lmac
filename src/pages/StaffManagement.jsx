@@ -93,19 +93,18 @@ export default function StaffManagement() {
           p_designation: form.designation,
           p_corporate_email: form.corporate_email.toLowerCase().trim(),
           p_mobile_number: form.mobile_number,
-          p_password: form.password,
           p_territory: form.territory,
           p_is_active: form.is_active,
         });
       } else {
-        // Admin creates staff — the SQL function also creates the Supabase
-        // Auth user (default password = mobile number).
+        // Admin creates staff and the matching Supabase Auth user.
         await db.rpc('admin_create_staff', {
           p_full_name: form.full_name,
           p_role: form.role,
           p_designation: form.designation,
           p_corporate_email: form.corporate_email.toLowerCase().trim(),
           p_mobile_number: form.mobile_number,
+          p_password: form.password,
           p_territory: form.territory,
         });
       }
