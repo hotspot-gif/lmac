@@ -4,6 +4,7 @@
 -- This replaces the old six-argument function with the password-aware version.
 
 drop function if exists public.admin_create_staff(text, text, text, text, text, text);
+drop function if exists public.admin_create_staff(text, text, text, text, text, text, text);
 
 create or replace function public.admin_create_staff(
     p_full_name       text,
@@ -43,27 +44,43 @@ begin
         raise exception 'A valid staff role is required.';
     end if;
 
-    if exists (select 1 from auth.users where lower(email) = v_email)
-       or exists (select 1 from public.staff where corporate_email = v_email) then
+    if exists (select 1 from public.staff where lower(corporate_email) = v_email) then
         raise exception 'A user with this email already exists.';
     end if;
 
-    insert into auth.users (
-        instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-        raw_app_meta_data, raw_user_meta_data, created_at, updated_at
-    ) values (
-        (select id from auth.instances limit 1),
-        gen_random_uuid(),
-        'authenticated',
-        'authenticated',
-        v_email,
-        crypt(p_password, gen_salt('bf')),
-        now(),
-        '{"provider":"email","providers":["email"]}'::jsonb,
-        jsonb_build_object('full_name', p_full_name),
-        now(),
-        now()
-    ) returning id into v_user_id;
+    -- A deleted staff profile may leave its Auth row behind. Reuse that row
+    -- instead of treating it as a new-user conflict.
+    select id into v_user_id
+      from auth.users
+     where lower(email) = v_email
+         limit 1;
+
+    if v_user_id is null then
+        insert into auth.users (
+            instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+            raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+        ) values (
+            (select id from auth.instances limit 1),
+            gen_random_uuid(),
+            'authenticated',
+            'authenticated',
+            v_email,
+            crypt(p_password, gen_salt('bf')),
+            now(),
+            '{"provider":"email","providers":["email"]}'::jsonb,
+            jsonb_build_object('full_name', p_full_name),
+            now(),
+            now()
+        ) returning id into v_user_id;
+    else
+        update auth.users
+           set encrypted_password = crypt(p_password, gen_salt('bf')),
+               email_confirmed_at = coalesce(email_confirmed_at, now()),
+               banned_until = null,
+               raw_user_meta_data = jsonb_build_object('full_name', p_full_name),
+               updated_at = now()
+         where id = v_user_id;
+    end if;
 
     insert into public.staff (
         id, full_name, role, designation, corporate_email, mobile_number, territory, is_active
@@ -74,6 +91,11 @@ begin
     return v_staff;
 end;
 $$;
+
+-- SECURITY DEFINER must be owned by the privileged database role because this
+-- function writes to Supabase's protected auth schema.
+alter function public.admin_create_staff(text, text, text, text, text, text, text)
+    owner to postgres;
 
 revoke execute on function public.admin_create_staff(text, text, text, text, text, text, text) from public, anon;
 grant execute on function public.admin_create_staff(text, text, text, text, text, text, text) to authenticated;
@@ -102,6 +124,45 @@ $$;
 
 revoke execute on function public.admin_create_staff(text, text, text, text, text, text) from public, anon;
 grant execute on function public.admin_create_staff(text, text, text, text, text, text) to authenticated;
+
+-- Repair staff profiles created by the old staff-only implementation.
+-- Those users can sign in with their existing mobile number after this runs.
+do $$
+declare
+    v_staff record;
+begin
+    for v_staff in
+        select s.id, s.corporate_email, s.full_name, s.mobile_number
+          from public.staff s
+         where not exists (select 1 from auth.users u where u.id = s.id)
+                     and coalesce(trim(s.mobile_number), '') <> ''
+           and not exists (
+               select 1 from auth.users u
+                where lower(u.email) = lower(s.corporate_email)
+           )
+    loop
+        insert into auth.users (
+            instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+            raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+        ) values (
+            (select id from auth.instances limit 1),
+            v_staff.id,
+            'authenticated',
+            'authenticated',
+            lower(trim(v_staff.corporate_email)),
+            crypt(v_staff.mobile_number, gen_salt('bf')),
+            now(),
+            '{"provider":"email","providers":["email"]}'::jsonb,
+            jsonb_build_object('full_name', v_staff.full_name),
+            now(),
+            now()
+        );
+    end loop;
+end;
+$$;
+
+-- Make the new RPC visible to PostgREST immediately.
+notify pgrst, 'reload schema';
 
 -- Optional verification:
 -- select n.nspname, p.proname, pg_get_function_arguments(p.oid)

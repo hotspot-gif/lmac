@@ -290,6 +290,7 @@ $$;
 -- Staff Management: create a staff member AND their Supabase Auth user in one
 -- call. The administrator supplies the initial password.
 drop function if exists public.admin_create_staff(text, text, text, text, text, text);
+drop function if exists public.admin_create_staff(text, text, text, text, text, text, text);
 create or replace function public.admin_create_staff(
     p_full_name       text,
     p_role            text,
@@ -328,27 +329,43 @@ begin
         raise exception 'A valid staff role is required.';
     end if;
 
-    if exists (select 1 from auth.users where lower(email) = v_email)
-       or exists (select 1 from public.staff where corporate_email = v_email) then
+    if exists (select 1 from public.staff where lower(corporate_email) = v_email) then
         raise exception 'A user with this email already exists.';
     end if;
 
-    insert into auth.users (
-        instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-        raw_app_meta_data, raw_user_meta_data, created_at, updated_at
-    ) values (
-        (select id from auth.instances limit 1),
-        gen_random_uuid(),
-        'authenticated',
-        'authenticated',
-        v_email,
-        crypt(p_password, gen_salt('bf')),
-        now(),
-        '{"provider":"email","providers":["email"]}'::jsonb,
-        jsonb_build_object('full_name', p_full_name),
-        now(),
-        now()
-    ) returning id into v_user_id;
+    -- A deleted staff profile may leave its Auth row behind. Reuse that row
+    -- instead of treating it as a new-user conflict.
+    select id into v_user_id
+      from auth.users
+     where lower(email) = v_email
+     limit 1;
+
+    if v_user_id is null then
+        insert into auth.users (
+            instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+            raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+        ) values (
+            (select id from auth.instances limit 1),
+            gen_random_uuid(),
+            'authenticated',
+            'authenticated',
+            v_email,
+            crypt(p_password, gen_salt('bf')),
+            now(),
+            '{"provider":"email","providers":["email"]}'::jsonb,
+            jsonb_build_object('full_name', p_full_name),
+            now(),
+            now()
+        ) returning id into v_user_id;
+    else
+        update auth.users
+           set encrypted_password = crypt(p_password, gen_salt('bf')),
+               email_confirmed_at = coalesce(email_confirmed_at, now()),
+               banned_until = null,
+               raw_user_meta_data = jsonb_build_object('full_name', p_full_name),
+               updated_at = now()
+         where id = v_user_id;
+    end if;
 
     insert into public.staff (
         id, full_name, role, designation, corporate_email, mobile_number, territory, is_active
@@ -359,6 +376,11 @@ begin
     return v_staff;
 end;
 $$;
+
+-- SECURITY DEFINER must be owned by the privileged database role because this
+-- function writes to Supabase's protected auth schema.
+alter function public.admin_create_staff(text, text, text, text, text, text, text)
+    owner to postgres;
 
 -- Staff Management: edit a staff member and keep their auth user in sync.
 -- - Changing the mobile number RESETS the password to the new mobile number.
@@ -493,6 +515,8 @@ $$;
 
 revoke execute on function public.admin_create_staff(text, text, text, text, text, text) from public, anon;
 grant execute on function public.admin_create_staff(text, text, text, text, text, text) to authenticated;
+
+notify pgrst, 'reload schema';
 
 revoke execute on function public.admin_update_staff(uuid, text, text, text, text, boolean, text, text) from public, anon;
 grant execute on function public.admin_update_staff(uuid, text, text, text, text, boolean, text, text) to authenticated;
