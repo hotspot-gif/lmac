@@ -85,7 +85,7 @@ export default function AdminDashboard() {
       {/* Welcome Header */}
       <div className="bg-gradient-to-br from-foreground to-foreground rounded-2xl p-5 sm:p-6 text-white shadow-lg shadow-foreground/10">
         <p className="text-accent text-sm font-medium mb-1">{t('Welcome back')}</p>
-        <h1 className="text-2xl sm:text-3xl font-bold mb-1">
+        <h1 data-language-controlled className="text-2xl sm:text-3xl font-bold mb-1">
           {language === 'it' ? 'Ciao' : 'Hello'}, {currentUser?.full_name}
         </h1>
         <div className="flex flex-wrap gap-2 mt-3">

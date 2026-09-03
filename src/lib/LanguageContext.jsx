@@ -218,6 +218,7 @@ export function LanguageProvider({ children }) {
       const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
       let node;
       while ((node = walker.nextNode())) {
+        if (node.parentElement?.closest('[data-language-controlled]')) continue;
         const current = node.nodeValue;
         const source = originalText.current.get(node) || italianToEnglish[current.trim()] || current;
         originalText.current.set(node, source);
