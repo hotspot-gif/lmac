@@ -243,7 +243,7 @@ export function LanguageProvider({ children }) {
 
     translatePage();
     const observer = new MutationObserver(translatePage);
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    observer.observe(document.body, { childList: true, subtree: true });
     return () => observer.disconnect();
   }, [language]);
 
