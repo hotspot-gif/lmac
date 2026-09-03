@@ -7,6 +7,7 @@ import { AuthProvider } from '@/lib/AuthContext';
 import ScrollToTop from './components/ScrollToTop';
 import { CustomAuthProvider } from '@/lib/customAuth';
 import CustomProtectedRoute from '@/components/CustomProtectedRoute';
+import { LanguageProvider } from '@/lib/LanguageContext';
 // Auth pages
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -26,11 +27,12 @@ import Profile from '@/pages/Profile';
 
 function App() {
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <ScrollToTop />
-          <CustomAuthProvider>
+    <LanguageProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <ScrollToTop />
+            <CustomAuthProvider>
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
@@ -50,11 +52,12 @@ function App() {
               </Route>
               <Route path="*" element={<PageNotFound />} />
             </Routes>
-          </CustomAuthProvider>
-        </Router>
-        <Toaster />
-      </QueryClientProvider>
-    </AuthProvider>
+            </CustomAuthProvider>
+          </Router>
+          <Toaster />
+        </QueryClientProvider>
+      </AuthProvider>
+    </LanguageProvider>
   )
 }
 

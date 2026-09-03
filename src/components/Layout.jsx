@@ -6,27 +6,30 @@ import {
   User, LogOut, Menu, X } from
 'lucide-react';
 import NotificationBar from '@/components/NotificationBar';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useLanguage } from '@/lib/LanguageContext';
 import logo from '@/Public/logo.svg';
 
 const NAV_ITEMS = {
   standard: [
-  { label: 'Dashboard', path: '/', icon: LayoutDashboard },
-  { label: 'Report an Issue', path: '/report-issue', icon: PlusCircle },
-  { label: 'My Tickets', path: '/my-tickets', icon: ListChecks },
-  { label: 'Profile', path: '/profile', icon: User }],
+  { label: 'dashboard', path: '/', icon: LayoutDashboard },
+  { label: 'reportIssue', path: '/report-issue', icon: PlusCircle },
+  { label: 'myTickets', path: '/my-tickets', icon: ListChecks },
+  { label: 'profile', path: '/profile', icon: User }],
 
   admin: [
-  { label: 'Dashboard', path: '/admin-dashboard', icon: LayoutDashboard },
-  { label: 'All Tickets', path: '/all-tickets', icon: ListChecks },
-  { label: 'Pending Cases', path: '/pending-cases', icon: Clock },
-  { label: 'Completed Cases', path: '/completed-cases', icon: CheckCircle },
-  { label: 'Staff Management', path: '/staff-management', icon: Users },
-  { label: 'Profile', path: '/profile', icon: User }]
+  { label: 'dashboard', path: '/admin-dashboard', icon: LayoutDashboard },
+  { label: 'allTickets', path: '/all-tickets', icon: ListChecks },
+  { label: 'pendingCases', path: '/pending-cases', icon: Clock },
+  { label: 'completedCases', path: '/completed-cases', icon: CheckCircle },
+  { label: 'staffManagement', path: '/staff-management', icon: Users },
+  { label: 'profile', path: '/profile', icon: User }]
 
 };
 
 export default function Layout({ children }) {
   const { currentUser, logout, isAdmin } = useCustomAuth();
+  const { t } = useLanguage();
   const location = useLocation();
   const navigate = useNavigate();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -52,7 +55,7 @@ export default function Layout({ children }) {
           </div>
           <div className="min-w-0">
             <p className="text-white font-bold text-sm leading-tight truncate">LMAC - Lyca Ops</p>
-            <p className="text-accent text-xs leading-tight">Market Assistance Center</p>
+            <p className="text-accent text-xs leading-tight">{t('marketAssistanceCenter')}</p>
           </div>
         </div>
       </div>
@@ -85,19 +88,22 @@ export default function Layout({ children }) {
             }>
             
               <Icon className="w-4 h-4 flex-shrink-0" />
-              {item.label}
+              {t(item.label)}
             </Link>);
 
       })}
       </nav>
 
       <div className="px-3 pb-4">
+        <div className="px-3 py-3 mb-2 border-t border-white/10">
+          <LanguageSwitcher compact />
+        </div>
         <button
         onClick={handleLogout}
         className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-white/60 hover:bg-red-500/20 hover:text-red-300 transition-all w-full">
         
           <LogOut className="w-4 h-4 flex-shrink-0" />
-          Logout
+          {t('logout')}
         </button>
       </div>
     </div>;
@@ -115,7 +121,7 @@ export default function Layout({ children }) {
           <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center p-0.5">
             <img src={logo} alt="Lyca Ops" className="w-full h-full object-contain" />
           </div>
-          <span className="text-white font-bold text-sm">Market Assistance Center</span>
+          <span className="text-white font-bold text-sm">{t('marketAssistanceCenter')}</span>
         </div>
         <button
           onClick={() => setMobileNavOpen(true)}
