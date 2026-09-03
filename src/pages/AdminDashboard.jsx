@@ -8,7 +8,7 @@ import StatusBadge from '@/components/StatusBadge';
 import UrgencyBadge from '@/components/UrgencyBadge';
 import { formatDate } from '@/lib/authUtils';
 import { FileText, Inbox, Clock, CheckCircle2, AlertOctagon, AlertTriangle, Loader2, ArrowRight } from 'lucide-react';
-import { BarChart, Bar, CartesianGrid, Cell, PieChart, Pie, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { Cell, PieChart, Pie, ResponsiveContainer, Tooltip } from 'recharts';
 
 const STATUS_CHART_COLORS = {
   Open: '#245bc1',
@@ -63,6 +63,7 @@ export default function AdminDashboard() {
     name: status,
     value: tickets.filter(ticket => ticket.status === status).length
   }));
+  const completedPercentage = stats.total === 0 ? 0 : Math.round(stats.completed / stats.total * 100);
   const categoryChartData = [...new Set(tickets.map(ticket => ticket.category).filter(Boolean))]
     .map(category => ({ name: category, value: tickets.filter(ticket => ticket.category === category).length }))
     .sort((a, b) => b.value - a.value)
@@ -112,21 +113,33 @@ export default function AdminDashboard() {
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         <div className="bg-white rounded-2xl border border-foreground/8 p-4 sm:p-5">
           <h2 className="text-lg font-bold text-foreground mb-4">Cases by Status</h2>
-          <div className="h-64">
+          <div className="h-64 relative">
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={statusChartData} margin={{ top: 8, right: 8, left: -20, bottom: 8 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="name" tick={{ fontSize: 11 }} />
-                <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey="value" radius={[5, 5, 0, 0]}>
+              <PieChart>
+                <Pie
+                  data={statusChartData}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  innerRadius={62}
+                  outerRadius={92}
+                  paddingAngle={2}
+                  stroke="white"
+                  strokeWidth={2}>
                   {statusChartData.map(status => (
                     <Cell key={status.name} fill={STATUS_CHART_COLORS[status.name]} />
                   ))}
-                </Bar>
-              </BarChart>
+                </Pie>
+                <Tooltip />
+              </PieChart>
             </ResponsiveContainer>
+            <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+              <span className="text-3xl font-bold text-foreground">{completedPercentage}%</span>
+              <span className="text-xs text-foreground/50">Complete</span>
+            </div>
           </div>
+          <p className="text-center text-xs text-foreground/50">{stats.total.toLocaleString()} total tickets submitted</p>
         </div>
         <div className="bg-white rounded-2xl border border-foreground/8 p-4 sm:p-5">
           <h2 className="text-lg font-bold text-foreground mb-4">Top Categories</h2>
