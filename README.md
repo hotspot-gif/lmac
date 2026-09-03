@@ -11,9 +11,8 @@ This application allows sales staff (ASM, FSE) to report issues identified in th
 ### Authentication
 - **Two-step login flow**: Enter corporate email → validate against active staff → enter password
 - **No public registration** — all users are preloaded by administrators
-- Standard users (ASM, FSE) default password = their mobile number
-- Admin users (HS-ADMIN, PM-ADMIN, CS-ADMIN) password = `Lyca@2026`
-- Passwords are stored as SHA-256 hashes, never exposed in the UI
+- Administrators choose the initial password when creating each user
+- Passwords are stored as bcrypt hashes in Supabase Auth, never exposed in the UI
 
 ### Standard User Capabilities
 - Dashboard with summary cards (Total, Open, In Progress, Pending, Completed, High Urgency)
@@ -90,7 +89,7 @@ vercel --prod
 ```
 
 ### Step 5 — Create the remaining staff accounts
-Sign in as an administrator and use **Staff Management** to add users (default password = the mobile number you enter; editing a user's mobile number resets their password to that number). Alternatively, add more `seed_staff()` calls at the bottom of `supabase_schema.sql` and re-run them in the SQL editor.
+Sign in as an administrator and use **Staff Management** to add users. The administrator chooses each user's initial password. Editing a user's mobile number still resets their password to the new number. Alternatively, add more `seed_staff()` calls at the bottom of `supabase_schema.sql` and re-run them in the SQL editor.
 
 ### Local development
 ```bash
@@ -107,7 +106,7 @@ Export the Staff / Ticket / TicketUpdate entities from Base44, then follow the n
 - **Ticket numbers** are also generated/validated in the database, so two users reporting an issue at the same time can never collide.
 - **Passwords** are bcrypt hashes inside Supabase Auth (`auth.users`) instead of client-side SHA-256 comparisons against the staff table.
 
-### Default Login Credentials (after running the seed script)
+### Seed Login Credentials (after running the seed script)
 
 **Standard Users** (password = mobile number):
 - `stelwin.kachappilly@universalservice.it` / `3510023408`

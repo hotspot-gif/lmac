@@ -34,7 +34,7 @@ export default function StaffManagement() {
   const [formLoading, setFormLoading] = useState(false);
   const [form, setForm] = useState({
     full_name: '', role: '', designation: '', corporate_email: '',
-    mobile_number: '', territory: '', is_active: true
+    mobile_number: '', password: '', territory: '', is_active: true
   });
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function StaffManagement() {
 
   const openAdd = () => {
     setEditing(null);
-    setForm({ full_name: '', role: '', designation: '', corporate_email: '', mobile_number: '', territory: '', is_active: true });
+    setForm({ full_name: '', role: '', designation: '', corporate_email: '', mobile_number: '', password: '', territory: '', is_active: true });
     setShowForm(true);
   };
 
@@ -66,7 +66,7 @@ export default function StaffManagement() {
     setForm({
       full_name: s.full_name, role: s.role, designation: s.designation || '',
       corporate_email: s.corporate_email, mobile_number: s.mobile_number,
-      territory: s.territory || '', is_active: s.is_active
+      password: '', territory: s.territory || '', is_active: s.is_active
     });
     setShowForm(true);
   };
@@ -93,6 +93,7 @@ export default function StaffManagement() {
           p_designation: form.designation,
           p_corporate_email: form.corporate_email.toLowerCase().trim(),
           p_mobile_number: form.mobile_number,
+          p_password: form.password,
           p_territory: form.territory,
           p_is_active: form.is_active,
         });
@@ -307,8 +308,23 @@ export default function StaffManagement() {
                   required
                   className="rounded-xl border-foreground/15"
                 />
-                {!editing && <p className="text-xs text-foreground/40">Default password will be the mobile number.</p>}
+                {!editing && <p className="text-xs text-foreground/40">Used only as the contact number.</p>}
               </div>
+              {!editing && (
+                <div className="space-y-2">
+                  <Label className="text-foreground font-medium text-sm">Password <span className="text-red-500">*</span></Label>
+                  <Input
+                    type="password"
+                    value={form.password}
+                    onChange={(e) => setForm({ ...form, password: e.target.value })}
+                    required
+                    minLength={6}
+                    className="rounded-xl border-foreground/15"
+                    autoComplete="new-password"
+                  />
+                  <p className="text-xs text-foreground/40">At least 6 characters.</p>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label className="text-foreground font-medium text-sm">Territory</Label>
                 <Input

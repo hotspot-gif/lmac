@@ -288,12 +288,14 @@ end;
 $$;
 
 -- Staff Management: create a staff member AND their Supabase Auth user in one
--- call. Default password = mobile number (bcrypt inside auth.users).
+-- call. The administrator supplies the initial password.
+drop function if exists public.admin_create_staff(text, text, text, text, text, text);
 create or replace function public.admin_create_staff(
     p_full_name       text,
     p_role            text,
     p_corporate_email text,
     p_mobile_number   text,
+    p_password        text,
     p_designation     text default null,
     p_territory       text default null
 )
@@ -305,13 +307,25 @@ as $$
 declare
     v_user_id uuid;
     v_email   text := lower(trim(p_corporate_email));
+    v_staff   public.staff;
 begin
     if not public.is_admin() then
         raise exception 'Only administrators can manage staff.';
     end if;
 
-    if coalesce(p_full_name, '') = '' or v_email = '' or coalesce(p_mobile_number, '') = '' then
-        raise exception 'Full name, corporate email and mobile number are required.';
+    if coalesce(trim(p_full_name), '') = ''
+       or coalesce(v_email, '') = ''
+       or coalesce(trim(p_mobile_number), '') = ''
+       or coalesce(p_password, '') = '' then
+        raise exception 'Full name, corporate email, mobile number and password are required.';
+    end if;
+
+    if length(p_password) < 6 then
+        raise exception 'Password must be at least 6 characters.';
+    end if;
+
+    if p_role is null or p_role not in ('ASM', 'FSE', 'HS-ADMIN', 'PM-ADMIN', 'CS-ADMIN') then
+        raise exception 'A valid staff role is required.';
     end if;
 
     if exists (select 1 from auth.users where lower(email) = v_email)
@@ -328,7 +342,7 @@ begin
         'authenticated',
         'authenticated',
         v_email,
-        crypt(p_mobile_number, gen_salt('bf')),
+        crypt(p_password, gen_salt('bf')),
         now(),
         '{"provider":"email","providers":["email"]}'::jsonb,
         jsonb_build_object('full_name', p_full_name),
@@ -340,9 +354,9 @@ begin
         id, full_name, role, designation, corporate_email, mobile_number, territory, is_active
     ) values (
         v_user_id, p_full_name, p_role, p_designation, v_email, p_mobile_number, p_territory, true
-    );
+    ) returning * into v_staff;
 
-    return (select s.* from public.staff s where s.id = v_user_id);
+    return v_staff;
 end;
 $$;
 
@@ -368,6 +382,7 @@ as $$
 declare
     v_existing public.staff;
     v_email    text := lower(trim(p_corporate_email));
+    v_staff    public.staff;
 begin
     if not public.is_admin() then
         raise exception 'Only administrators can manage staff.';
@@ -411,9 +426,10 @@ begin
            mobile_number   = p_mobile_number,
            territory       = p_territory,
            is_active       = p_is_active
-     where id = p_staff_id;
+      where id = p_staff_id
+     returning * into v_staff;
 
-    return (select s.* from public.staff s where s.id = p_staff_id);
+     return v_staff;
 end;
 $$;
 
@@ -451,8 +467,8 @@ $$;
 revoke execute on function public.staff_validate_email(text) from public;
 grant execute on function public.staff_validate_email(text) to anon, authenticated;
 
-revoke execute on function public.admin_create_staff(text, text, text, text, text, text) from public, anon;
-grant execute on function public.admin_create_staff(text, text, text, text, text, text) to authenticated;
+revoke execute on function public.admin_create_staff(text, text, text, text, text, text, text) from public, anon;
+grant execute on function public.admin_create_staff(text, text, text, text, text, text, text) to authenticated;
 
 revoke execute on function public.admin_update_staff(uuid, text, text, text, text, boolean, text, text) from public, anon;
 grant execute on function public.admin_update_staff(uuid, text, text, text, text, boolean, text, text) to authenticated;
