@@ -39,7 +39,7 @@ export default function NotificationBar() {
       ]);
       const ticketMap = new Map((allTickets || []).map(t => [t.id, t]));
       let relevant = (updates || []).filter(u =>
-        ['status_change', 'response', 'completed'].includes(u.update_type) &&
+        ['created', 'status_change', 'response', 'completed'].includes(u.update_type) &&
         u.created_by !== currentUser.id
       );
       if (!isAdmin) {
@@ -88,6 +88,9 @@ export default function NotificationBar() {
   };
 
   const getDescription = (n) => {
+    if (n.update_type === 'created') {
+      return 'New ticket submitted';
+    }
     if (n.update_type === 'status_change') {
       return `Status changed from "${n.previous_status}" to "${n.new_status}"`;
     }
