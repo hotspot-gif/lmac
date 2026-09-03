@@ -10,6 +10,13 @@ import { formatDate } from '@/lib/authUtils';
 import { FileText, Inbox, Clock, CheckCircle2, AlertOctagon, AlertTriangle, Loader2, ArrowRight } from 'lucide-react';
 import { BarChart, Bar, CartesianGrid, Cell, PieChart, Pie, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
+const STATUS_CHART_COLORS = {
+  Open: '#245bc1',
+  'In Progress': '#00D7FF',
+  Pending: 'hsl(45 97% 50%)',
+  Completed: '#08dc7d'
+};
+
 export default function AdminDashboard() {
   const { currentUser, isAdmin } = useCustomAuth();
   const navigate = useNavigate();
@@ -112,7 +119,11 @@ export default function AdminDashboard() {
                 <XAxis dataKey="name" tick={{ fontSize: 11 }} />
                 <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
                 <Tooltip />
-                <Bar dataKey="value" fill="#245bc1" radius={[5, 5, 0, 0]} />
+                <Bar dataKey="value" radius={[5, 5, 0, 0]}>
+                  {statusChartData.map(status => (
+                    <Cell key={status.name} fill={STATUS_CHART_COLORS[status.name]} />
+                  ))}
+                </Bar>
               </BarChart>
             </ResponsiveContainer>
           </div>

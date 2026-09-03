@@ -7,7 +7,14 @@ import StatCard from '@/components/StatCard';
 import TicketCard from '@/components/TicketCard';
 import { Button } from '@/components/ui/button';
 import { PlusCircle, Inbox, Clock, AlertOctagon, CheckCircle2, Loader2, FileText } from 'lucide-react';
-import { BarChart, Bar, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+import { BarChart, Bar, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
+
+const STATUS_CHART_COLORS = {
+  Open: '#245bc1',
+  'In Progress': '#00D7FF',
+  Pending: 'hsl(45 97% 50%)',
+  Completed: '#08dc7d'
+};
 
 export default function Dashboard() {
   const { currentUser, isAdmin } = useCustomAuth();
@@ -104,7 +111,11 @@ export default function Dashboard() {
               <XAxis dataKey="name" tick={{ fontSize: 11 }} />
               <YAxis allowDecimals={false} tick={{ fontSize: 11 }} />
               <Tooltip />
-              <Bar dataKey="value" fill="#245bc1" radius={[5, 5, 0, 0]} />
+              <Bar dataKey="value" radius={[5, 5, 0, 0]}>
+                {statusChartData.map(status => (
+                  <Cell key={status.name} fill={STATUS_CHART_COLORS[status.name]} />
+                ))}
+              </Bar>
             </BarChart>
           </ResponsiveContainer>
         </div>
