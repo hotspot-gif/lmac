@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
 
 const STORAGE_KEY = 'lmac_language';
 
@@ -201,43 +201,14 @@ const LanguageContext = createContext(null);
 
 export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState(() => localStorage.getItem(STORAGE_KEY) || 'en');
-  const originalText = useRef(new WeakMap());
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, language);
     document.documentElement.lang = language;
-
-    const translateNode = (node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        const source = originalText.current.get(node) ?? node.nodeValue;
-        originalText.current.set(node, source);
-        const translated = language === 'it' ? (pageTextTranslations[source.trim()] || source) : source;
-        if (node.nodeValue !== translated) node.nodeValue = translated;
-      }
-      if (node.nodeType === Node.ELEMENT_NODE) {
-        ['placeholder', 'aria-label', 'title'].forEach((attribute) => {
-          if (node.hasAttribute(attribute)) {
-            const source = node.getAttribute(`data-lmac-${attribute}`) || node.getAttribute(attribute);
-            node.setAttribute(`data-lmac-${attribute}`, source);
-            node.setAttribute(attribute, language === 'it' ? (pageTextTranslations[source] || source) : source);
-          }
-        });
-      }
-    };
-    const translatePage = () => {
-      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-      let node;
-      while ((node = walker.nextNode())) translateNode(node);
-      document.querySelectorAll('input, textarea, button, [role="button"]').forEach(translateNode);
-    };
-    translatePage();
-    const observer = new MutationObserver(translatePage);
-    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
-    return () => observer.disconnect();
   }, [language]);
 
   const translate = (key, values = {}) => {
-    let value = translations[language]?.[key] || translations.en[key] || key;
+    let value = translations[language]?.[key] || translations.en[key] || (language === 'it' ? pageTextTranslations[key] : key);
     Object.entries(values).forEach(([name, replacement]) => {
       value = value.replace(`{${name}}`, replacement);
     });

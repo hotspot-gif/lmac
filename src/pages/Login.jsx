@@ -75,16 +75,16 @@ export default function Login() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-40 h-40 mb-2">
+          <div className="inline-flex items-center justify-center w-48 h-48 mb-0">
             <img src={logo} alt="Lyca Ops" className="w-full h-full object-contain" />
           </div>
-          <p className="text-sm text-foreground/60 mt-1">{t('marketAssistanceCenter')}</p>
+          <p className="text-sm text-foreground/60 mt-0">{t('marketAssistanceCenter')}</p>
         </div>
 
         <Card className="border-0 shadow-xl shadow-foreground/5 rounded-2xl overflow-hidden">
           <div className="bg-foreground px-6 py-4">
             <p className="text-sm font-medium text-[hsl(var(--card))]">
-              {step === 1 ? t('stepIdentify') : t('hello', { name: userName })}
+              {step === 1 ? t('stepIdentify') : t('password')}
             </p>
             <p className="text-white/70 text-xs mt-0.5">
               {step === 1 ? t('enterEmail') : t('enterPassword')}
@@ -100,7 +100,7 @@ export default function Login() {
             }
 
             {step === 1 ?
-            <form onSubmit={handleEmailSubmit} className="space-y-4">
+            <form key="email-step" onSubmit={handleEmailSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email" className="text-foreground font-medium">{t('corporateEmail')}</Label>
                   <div className="relative">
@@ -129,7 +129,7 @@ export default function Login() {
                 </Button>
               </form> :
 
-            <form onSubmit={handlePasswordSubmit} className="space-y-4">
+            <form key="password-step" onSubmit={handlePasswordSubmit} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="password" className="text-foreground font-medium">{t('password')}</Label>
                   <div className="relative">
@@ -168,7 +168,7 @@ export default function Login() {
                 </div>
               </form>
             }
-            <div className="flex justify-center mt-5 pt-4 border-t border-foreground/10">
+            <div className="flex justify-end mt-5 pt-4 border-t border-foreground/10">
               <LanguageSwitcher />
             </div>
           </div>
