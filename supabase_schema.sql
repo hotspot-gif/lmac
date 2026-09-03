@@ -3,7 +3,8 @@
 -- Supabase PostgreSQL Schema, Security & Seed Script
 -- ============================================================================
 -- RUN: Supabase Dashboard → SQL Editor → New query → paste this whole file → Run
--- Safe to re-run (idempotent).
+-- This is a destructive clean install. It removes existing app data and
+-- Auth users before recreating the schema and initial administrator.
 --
 -- What this script creates:
 --   1. Tables (matching the React app exactly):
@@ -26,6 +27,15 @@
 
 create extension if not exists pgcrypto;
 
+-- ==========================================================================
+-- 0. CLEAN INSTALL
+-- ==========================================================================
+drop table if exists public.ticket_updates cascade;
+drop table if exists public.tickets cascade;
+drop table if exists public.staff cascade;
+delete from auth.identities;
+delete from auth.users;
+
 -- ============================================================================
 -- 1. TABLES
 -- ============================================================================
@@ -34,11 +44,17 @@ create extension if not exists pgcrypto;
 create table if not exists public.staff (
     id              uuid primary key references auth.users(id) on delete cascade,
     full_name       text not null,
-    role            text not null check (role in ('ASM', 'FSE', 'HS-ADMIN', 'PM-ADMIN', 'CS-ADMIN')),
-    designation     text,
+    role            text not null check (role in ('ASM', 'FSE', 'RSM', 'HS-ADMIN', 'PM-ADMIN', 'CS-ADMIN')),
+    designation     text check (designation is null or designation in (
+        'Zone Manager', 'Office Manager', 'Region Manager', 'Admin', 'CS',
+        'Retailer Support', 'Admin-UK', 'Admin-IN'
+    )),
     corporate_email text not null unique,
     mobile_number   text,
-    territory       text,
+    territory       text check (territory is null or territory in (
+        'North Region', 'Milan', 'Bologna', 'Torino', 'Padova',
+        'South Region', 'Rome', 'Napoli', 'Bari', 'Palermo', 'ITALY (All)'
+    )),
     is_active       boolean not null default true,
     created_date    timestamptz not null default now(),
     updated_date    timestamptz not null default now()
@@ -325,8 +341,22 @@ begin
         raise exception 'Password must be at least 6 characters.';
     end if;
 
-    if p_role is null or p_role not in ('ASM', 'FSE', 'HS-ADMIN', 'PM-ADMIN', 'CS-ADMIN') then
+    if p_role is null or p_role not in ('ASM', 'FSE', 'RSM', 'HS-ADMIN', 'PM-ADMIN', 'CS-ADMIN') then
         raise exception 'A valid staff role is required.';
+    end if;
+
+    if p_designation is not null and p_designation not in (
+        'Zone Manager', 'Office Manager', 'Region Manager', 'Admin', 'CS',
+        'Retailer Support', 'Admin-UK', 'Admin-IN'
+    ) then
+        raise exception 'A valid designation is required.';
+    end if;
+
+    if p_territory is not null and p_territory not in (
+        'North Region', 'Milan', 'Bologna', 'Torino', 'Padova',
+        'South Region', 'Rome', 'Napoli', 'Bari', 'Palermo', 'ITALY (All)'
+    ) then
+        raise exception 'A valid territory is required.';
     end if;
 
     if exists (select 1 from public.staff where lower(corporate_email) = v_email) then
@@ -345,7 +375,7 @@ begin
             instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
             raw_app_meta_data, raw_user_meta_data, created_at, updated_at
         ) values (
-            (select id from auth.instances limit 1),
+            coalesce((select id from auth.instances limit 1), '00000000-0000-0000-0000-000000000000'::uuid),
             gen_random_uuid(),
             'authenticated',
             'authenticated',
@@ -359,13 +389,26 @@ begin
         ) returning id into v_user_id;
     else
         update auth.users
-           set encrypted_password = crypt(p_password, gen_salt('bf')),
+           set instance_id = coalesce(instance_id, '00000000-0000-0000-0000-000000000000'::uuid),
+               encrypted_password = crypt(p_password, gen_salt('bf')),
                email_confirmed_at = coalesce(email_confirmed_at, now()),
                banned_until = null,
                raw_user_meta_data = jsonb_build_object('full_name', p_full_name),
                updated_at = now()
          where id = v_user_id;
     end if;
+
+    -- GoTrue expects an email identity alongside the Auth user row.
+    insert into auth.identities (
+        id, user_id, provider_id, identity_data, provider, created_at, updated_at
+    )
+    select gen_random_uuid(), v_user_id, v_email,
+           jsonb_build_object('sub', v_user_id::text, 'email', v_email),
+           'email', now(), now()
+     where not exists (
+         select 1 from auth.identities
+          where provider = 'email' and provider_id = v_email
+     );
 
     insert into public.staff (
         id, full_name, role, designation, corporate_email, mobile_number, territory, is_active
@@ -413,6 +456,24 @@ begin
     select * into v_existing from public.staff where id = p_staff_id;
     if v_existing.id is null then
         raise exception 'Staff member not found.';
+    end if;
+
+    if p_role is null or p_role not in ('ASM', 'FSE', 'RSM', 'HS-ADMIN', 'PM-ADMIN', 'CS-ADMIN') then
+        raise exception 'A valid staff role is required.';
+    end if;
+
+    if p_designation is not null and p_designation not in (
+        'Zone Manager', 'Office Manager', 'Region Manager', 'Admin', 'CS',
+        'Retailer Support', 'Admin-UK', 'Admin-IN'
+    ) then
+        raise exception 'A valid designation is required.';
+    end if;
+
+    if p_territory is not null and p_territory not in (
+        'North Region', 'Milan', 'Bologna', 'Torino', 'Padova',
+        'South Region', 'Rome', 'Napoli', 'Bari', 'Palermo', 'ITALY (All)'
+    ) then
+        raise exception 'A valid territory is required.';
     end if;
 
     if v_email <> v_existing.corporate_email then
@@ -492,30 +553,6 @@ grant execute on function public.staff_validate_email(text) to anon, authenticat
 revoke execute on function public.admin_create_staff(text, text, text, text, text, text, text) from public, anon;
 grant execute on function public.admin_create_staff(text, text, text, text, text, text, text) to authenticated;
 
--- Keep older frontend bundles working during deployment. New clients use the
--- seven-argument function and an explicit password.
-create or replace function public.admin_create_staff(
-    p_full_name       text,
-    p_role            text,
-    p_corporate_email text,
-    p_mobile_number   text,
-    p_designation     text default null,
-    p_territory       text default null
-)
-returns public.staff
-language sql
-security definer
-set search_path = public, extensions
-as $$
-    select public.admin_create_staff(
-        p_full_name, p_role, p_corporate_email, p_mobile_number,
-        p_mobile_number, p_designation, p_territory
-    );
-$$;
-
-revoke execute on function public.admin_create_staff(text, text, text, text, text, text) from public, anon;
-grant execute on function public.admin_create_staff(text, text, text, text, text, text) to authenticated;
-
 notify pgrst, 'reload schema';
 
 revoke execute on function public.admin_update_staff(uuid, text, text, text, text, boolean, text, text) from public, anon;
@@ -527,9 +564,7 @@ grant execute on function public.admin_set_staff_active(uuid, boolean) to authen
 -- ============================================================================
 -- 5. SEED DATA — INITIAL USERS
 -- ============================================================================
--- Passwords live in Supabase Auth (auth.users, bcrypt):
---   Standard users (ASM, FSE): default password = their mobile number
---   Admin users (HS-ADMIN, PM-ADMIN, CS-ADMIN): default password = 'Lyca@2026'
+-- The initial administrator password is 'Lyca@2026'. Change it after login.
 --
 -- seed_staff() is a one-off helper that creates BOTH the auth user and the
 -- staff profile, and skips users that already exist (safe to re-run).
@@ -567,7 +602,7 @@ begin
             instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
             raw_app_meta_data, raw_user_meta_data, created_at, updated_at
         ) values (
-            (select id from auth.instances limit 1),
+            coalesce((select id from auth.instances limit 1), '00000000-0000-0000-0000-000000000000'::uuid),
             gen_random_uuid(),
             'authenticated',
             'authenticated',
@@ -581,6 +616,17 @@ begin
         ) returning id into v_id;
     end if;
 
+    insert into auth.identities (
+        id, user_id, provider_id, identity_data, provider, created_at, updated_at
+    )
+    select gen_random_uuid(), v_id, v_email,
+           jsonb_build_object('sub', v_id::text, 'email', v_email),
+           'email', now(), now()
+     where not exists (
+         select 1 from auth.identities
+          where provider = 'email' and provider_id = v_email
+     );
+
     insert into public.staff (
         id, full_name, role, designation, corporate_email, mobile_number, territory, is_active
     ) values (
@@ -589,28 +635,10 @@ begin
 end;
 $$;
 
--- Standard users — password = mobile number
+-- Initial administrator — password = 'Lyca@2026'
 select public.seed_staff(
-    'Stelwin Kachappilly', 'ASM', 'Bari Office Manager Admin',
-    'stelwin.kachappilly@universalservice.it', '3510023408', '3510023408', 'LMIT-HS-BARI'
-);
-select public.seed_staff(
-    'Lindon Francesco', 'FSE', null,
-    'lindon.francesco@universalservice.it', '3512359754', '3512359754', null
-);
-
--- Admin users — password = 'Lyca@2026'
-select public.seed_staff(
-    'DILAN FERNANDO', 'HS-ADMIN', 'Hotspot Manager Admin',
-    'dilan.fernando@universalservice.it', '3510016000', 'Lyca@2026', 'ITALY'
-);
-select public.seed_staff(
-    'Sohan Fernando', 'PM-ADMIN', null,
-    'sohan.fernando@universalservice.it', null, 'Lyca@2026', null
-);
-select public.seed_staff(
-    'Elisabetta A.', 'CS-ADMIN', null,
-    'elisabetta.a@universalservice.it', null, 'Lyca@2026', null
+    'DILAN FERNANDO', 'HS-ADMIN', 'Admin',
+    'dilan.fernando@universalservice.it', '3510016000', 'Lyca@2026', 'ITALY (All)'
 );
 -- ... add the remaining staff accounts here (one seed_staff() call per user).
 

@@ -54,4 +54,29 @@ export const MOBILE_NETWORK_CATEGORIES = [
 ];
 
 export const ADMIN_ROLES = ["HS-ADMIN", "PM-ADMIN", "CS-ADMIN"];
-export const STANDARD_ROLES = ["ASM", "FSE"];
+export const STANDARD_ROLES = ["ASM", "FSE", "RSM"];
+
+export const TERRITORY_OPTIONS = [
+  "North Region",
+  "Milan",
+  "Bologna",
+  "Torino",
+  "Padova",
+  "South Region",
+  "Rome",
+  "Napoli",
+  "Bari",
+  "Palermo",
+  "ITALY (All)",
+];
+
+export const DESIGNATION_OPTIONS = [
+  "Zone Manager",
+  "Office Manager",
+  "Region Manager",
+  "Admin",
+  "CS",
+  "Retailer Support",
+  "Admin-UK",
+  "Admin-IN",
+];

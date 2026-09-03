@@ -4,7 +4,7 @@ A production-ready ticket management system for field sales teams and administra
 
 ## Overview
 
-This application allows sales staff (ASM, FSE) to report issues identified in the market with structured categories, impact, and urgency levels. Administrators (HS-ADMIN, PM-ADMIN, CS-ADMIN) can view all tickets, filter and search, update statuses, respond with detailed answers, and manage staff accounts.
+This application allows sales staff (ASM, FSE, RSM) to report issues identified in the market with structured categories, impact, and urgency levels. Administrators (HS-ADMIN, PM-ADMIN, CS-ADMIN) can view all tickets, filter and search, update statuses, respond with detailed answers, and manage staff accounts.
 
 ## Features
 
@@ -52,7 +52,7 @@ The app is a standard React (Vite) SPA. Supabase provides the database, authenti
 
 ### Step 1 — Create the Supabase project
 1. Go to [supabase.com](https://supabase.com) → **New project** (choose a region close to your users, and save the database password somewhere safe).
-2. When the project is ready, open **SQL Editor → New query**, paste the full contents of [`supabase_schema.sql`](./supabase_schema.sql) and click **Run**. This creates:
+2. When the project is ready, open **SQL Editor → New query**, paste the full contents of [`supabase_schema.sql`](./supabase_schema.sql) and click **Run**. This performs a clean destructive reset, then creates:
    - the `staff`, `tickets`, and `ticket_updates` tables,
    - Row Level Security policies (standard users see only their own tickets, admins see all),
    - the helper functions the app calls (`staff_validate_email`, `admin_create_staff`, `admin_update_staff`, `admin_set_staff_active`),
@@ -88,7 +88,7 @@ vercel env add VITE_SUPABASE_ANON_KEY
 vercel --prod
 ```
 
-If the deployed app reports that `admin_create_staff(...)` cannot be found, run [`supabase_migration_admin_password.sql`](./supabase_migration_admin_password.sql) in the Supabase SQL Editor. This updates an existing database without rerunning the full schema.
+Do not run [`supabase_migration_admin_password.sql`](./supabase_migration_admin_password.sql) for this setup. It is retained as a legacy reference; rerun [`supabase_schema.sql`](./supabase_schema.sql) when a clean rebuild is required.
 
 ### Step 5 — Create the remaining staff accounts
 Sign in as an administrator and use **Staff Management** to add users. The administrator chooses each user's initial password. Editing a user's mobile number still resets their password to the new number. Alternatively, add more `seed_staff()` calls at the bottom of `supabase_schema.sql` and re-run them in the SQL editor.
@@ -108,16 +108,11 @@ Export the Staff / Ticket / TicketUpdate entities from Base44, then follow the n
 - **Ticket numbers** are also generated/validated in the database, so two users reporting an issue at the same time can never collide.
 - **Passwords** are bcrypt hashes inside Supabase Auth (`auth.users`) instead of client-side SHA-256 comparisons against the staff table.
 
-### Seed Login Credentials (after running the seed script)
+### Initial Login (after a clean rebuild)
 
-**Standard Users** (password = mobile number):
-- `stelwin.kachappilly@universalservice.it` / `3510023408`
-- `lindon.francesco@universalservice.it` / `3512359754`
-
-**Admin Users** (password = `Lyca@2026`):
 - `dilan.fernando@universalservice.it` / `Lyca@2026` (HS-ADMIN)
-- `sohan.fernando@universalservice.it` / `Lyca@2026` (PM-ADMIN)
-- `elisabetta.a@universalservice.it` / `Lyca@2026` (CS-ADMIN)
+
+After signing in, use Staff Management to create all other accounts. Public registration remains disabled.
 
 ## Database Schema
 

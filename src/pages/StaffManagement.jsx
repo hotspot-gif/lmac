@@ -13,7 +13,12 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter
 } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
-import { ADMIN_ROLES, STANDARD_ROLES } from '@/lib/categories';
+import {
+  ADMIN_ROLES,
+  STANDARD_ROLES,
+  TERRITORY_OPTIONS,
+  DESIGNATION_OPTIONS,
+} from '@/lib/categories';
 import { toast } from '@/components/ui/use-toast';
 import {
   Loader2, Search, UserPlus, Pencil, Power, PowerOff, Users, Mail
@@ -281,11 +286,12 @@ export default function StaffManagement() {
               </div>
               <div className="space-y-2">
                 <Label className="text-foreground font-medium text-sm">Designation</Label>
-                <Input
-                  value={form.designation}
-                  onChange={(e) => setForm({ ...form, designation: e.target.value })}
-                  className="rounded-xl border-foreground/15"
-                />
+                <Select value={form.designation} onValueChange={(v) => setForm({ ...form, designation: v })}>
+                  <SelectTrigger className="rounded-xl border-foreground/15"><SelectValue placeholder="Select designation" /></SelectTrigger>
+                  <SelectContent>
+                    {DESIGNATION_OPTIONS.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             <div className="space-y-2">
@@ -326,11 +332,12 @@ export default function StaffManagement() {
               )}
               <div className="space-y-2">
                 <Label className="text-foreground font-medium text-sm">Territory</Label>
-                <Input
-                  value={form.territory}
-                  onChange={(e) => setForm({ ...form, territory: e.target.value })}
-                  className="rounded-xl border-foreground/15"
-                />
+                <Select value={form.territory} onValueChange={(v) => setForm({ ...form, territory: v })}>
+                  <SelectTrigger className="rounded-xl border-foreground/15"><SelectValue placeholder="Select territory" /></SelectTrigger>
+                  <SelectContent>
+                    {TERRITORY_OPTIONS.map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
             {editing && (

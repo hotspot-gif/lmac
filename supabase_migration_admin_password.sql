@@ -1,7 +1,8 @@
--- Apply this migration in Supabase SQL Editor if the app reports:
--- "Could not find the function public.admin_create_staff(...) in the schema cache"
+-- LEGACY MIGRATION: do not run this for a clean installation.
 --
--- This replaces the old six-argument function with the password-aware version.
+-- The old migration preserved broken Auth rows. For the requested reset, run
+-- the complete supabase_schema.sql instead. It removes app data and Auth
+-- users, recreates all functions, and seeds the initial administrator.
 
 drop function if exists public.admin_create_staff(text, text, text, text, text, text);
 drop function if exists public.admin_create_staff(text, text, text, text, text, text, text);
@@ -60,7 +61,7 @@ begin
             instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
             raw_app_meta_data, raw_user_meta_data, created_at, updated_at
         ) values (
-            (select id from auth.instances limit 1),
+            coalesce((select id from auth.instances limit 1), '00000000-0000-0000-0000-000000000000'::uuid),
             gen_random_uuid(),
             'authenticated',
             'authenticated',
@@ -74,13 +75,26 @@ begin
         ) returning id into v_user_id;
     else
         update auth.users
-           set encrypted_password = crypt(p_password, gen_salt('bf')),
+           set instance_id = coalesce(instance_id, '00000000-0000-0000-0000-000000000000'::uuid),
+               encrypted_password = crypt(p_password, gen_salt('bf')),
                email_confirmed_at = coalesce(email_confirmed_at, now()),
                banned_until = null,
                raw_user_meta_data = jsonb_build_object('full_name', p_full_name),
                updated_at = now()
          where id = v_user_id;
     end if;
+
+    -- GoTrue expects an email identity alongside the Auth user row.
+    insert into auth.identities (
+        id, user_id, provider_id, identity_data, provider, created_at, updated_at
+    )
+    select gen_random_uuid(), v_user_id, v_email,
+           jsonb_build_object('sub', v_user_id::text, 'email', v_email),
+           'email', now(), now()
+     where not exists (
+         select 1 from auth.identities
+          where provider = 'email' and provider_id = v_email
+     );
 
     insert into public.staff (
         id, full_name, role, designation, corporate_email, mobile_number, territory, is_active
@@ -145,7 +159,7 @@ begin
             instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
             raw_app_meta_data, raw_user_meta_data, created_at, updated_at
         ) values (
-            (select id from auth.instances limit 1),
+            coalesce((select id from auth.instances limit 1), '00000000-0000-0000-0000-000000000000'::uuid),
             v_staff.id,
             'authenticated',
             'authenticated',
@@ -157,9 +171,51 @@ begin
             now(),
             now()
         );
+
+        insert into auth.identities (
+            id, user_id, provider_id, identity_data, provider, created_at, updated_at
+        ) values (
+            gen_random_uuid(), v_staff.id, lower(trim(v_staff.corporate_email)),
+            jsonb_build_object('sub', v_staff.id::text, 'email', lower(trim(v_staff.corporate_email))),
+            'email', now(), now()
+        );
     end loop;
 end;
 $$;
+
+-- Normalize manually-created Auth rows before GoTrue queries them.
+update auth.users
+    set instance_id = coalesce((select id from auth.instances limit 1), '00000000-0000-0000-0000-000000000000'::uuid),
+         aud = coalesce(aud, 'authenticated'),
+         role = coalesce(role, 'authenticated'),
+         email = lower(trim(email)),
+         email_confirmed_at = coalesce(email_confirmed_at, created_at, now()),
+       updated_at = now()
+ where email is not null;
+
+-- Normalize an existing email identity before creating any missing ones.
+update auth.identities i
+    set provider_id = lower(trim(u.email)),
+         identity_data = jsonb_build_object('sub', u.id::text, 'email', lower(trim(u.email))),
+         updated_at = now()
+  from auth.users u
+ where i.user_id = u.id
+    and i.provider = 'email'
+    and u.email is not null;
+
+-- Repair Auth users created without their email identity.
+insert into auth.identities (
+        id, user_id, provider_id, identity_data, provider, created_at, updated_at
+)
+select gen_random_uuid(), u.id, lower(trim(u.email)),
+             jsonb_build_object('sub', u.id::text, 'email', lower(trim(u.email))),
+             'email', now(), now()
+    from auth.users u
+ where u.email is not null
+     and not exists (
+             select 1 from auth.identities i
+                where i.provider = 'email' and i.provider_id = lower(trim(u.email))
+     );
 
 -- Make the new RPC visible to PostgREST immediately.
 notify pgrst, 'reload schema';
@@ -168,3 +224,10 @@ notify pgrst, 'reload schema';
 -- select n.nspname, p.proname, pg_get_function_arguments(p.oid)
 -- from pg_proc p join pg_namespace n on n.oid = p.pronamespace
 -- where n.nspname = 'public' and p.proname = 'admin_create_staff';
+
+-- Verification (run separately after this migration if login still fails):
+-- select u.id, u.email, u.instance_id, u.aud, u.role,
+--        u.email_confirmed_at, i.provider, i.provider_id
+--   from auth.users u
+--   left join auth.identities i on i.user_id = u.id and i.provider = 'email'
+--  where lower(u.email) = lower('user@example.com');
