@@ -373,7 +373,10 @@ begin
     if v_user_id is null then
         insert into auth.users (
             instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-            raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+            confirmation_token, recovery_token, email_change_token_new, email_change,
+            email_change_token_current, email_change_confirm_status, reauthentication_token,
+            raw_app_meta_data, raw_user_meta_data, is_sso_user, is_anonymous,
+            created_at, updated_at
         ) values (
             coalesce((select id from auth.instances limit 1), '00000000-0000-0000-0000-000000000000'::uuid),
             gen_random_uuid(),
@@ -382,8 +385,10 @@ begin
             v_email,
             crypt(p_password, gen_salt('bf')),
             now(),
+            '', '', '', '', '', 0, '',
             '{"provider":"email","providers":["email"]}'::jsonb,
             jsonb_build_object('full_name', p_full_name),
+            false, false,
             now(),
             now()
         ) returning id into v_user_id;
@@ -600,7 +605,10 @@ begin
     if v_id is null then
         insert into auth.users (
             instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
-            raw_app_meta_data, raw_user_meta_data, created_at, updated_at
+            confirmation_token, recovery_token, email_change_token_new, email_change,
+            email_change_token_current, email_change_confirm_status, reauthentication_token,
+            raw_app_meta_data, raw_user_meta_data, is_sso_user, is_anonymous,
+            created_at, updated_at
         ) values (
             coalesce((select id from auth.instances limit 1), '00000000-0000-0000-0000-000000000000'::uuid),
             gen_random_uuid(),
@@ -609,8 +617,10 @@ begin
             v_email,
             crypt(p_password, gen_salt('bf')),
             now(),
+            '', '', '', '', '', 0, '',
             '{"provider":"email","providers":["email"]}'::jsonb,
             jsonb_build_object('full_name', p_full_name),
+            false, false,
             now(),
             now()
         ) returning id into v_id;
