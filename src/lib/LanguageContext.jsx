@@ -1,6 +1,130 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useRef, useState } from 'react';
 
 const STORAGE_KEY = 'lmac_language';
+
+const pageTextTranslations = {
+  'Welcome back': 'Bentornato',
+  'Pending Cases Summary': 'Riepilogo casi in sospeso',
+  'Total Tickets': 'Ticket totali',
+  'Open': 'Aperto',
+  'In Progress': 'In lavorazione',
+  'Pending': 'In sospeso',
+  'Completed': 'Completato',
+  'Service Impact': 'Impatto sul servizio',
+  'Many Customers': 'Molti clienti',
+  'Few Customers': 'Pochi clienti',
+  'Single customers': 'Un solo cliente',
+  'No Customer Impact': 'Nessun impatto sui clienti',
+  'Cases by Status': 'Casi per stato',
+  'Top Categories': 'Categorie principali',
+  'Tickets Requiring Attention': 'Ticket che richiedono attenzione',
+  'View all': 'Visualizza tutto',
+  'All caught up!': 'Tutto aggiornato!',
+  'No active tickets require attention.': 'Nessun ticket attivo richiede attenzione.',
+  'All Tickets': 'Tutti i ticket',
+  'Filters': 'Filtri',
+  'Status': 'Stato',
+  'Category': 'Categoria',
+  'Sub Category': 'Sottocategoria',
+  'Role': 'Ruolo',
+  'Branch': 'Filiale',
+  'Impact': 'Impatto',
+  'Urgency': 'Urgenza',
+  'Clear all filters': 'Cancella tutti i filtri',
+  'No tickets found': 'Nessun ticket trovato',
+  'Try adjusting your search or filters.': 'Prova a modificare la ricerca o i filtri.',
+  'Completed Cases': 'Casi completati',
+  'All resolved and closed tickets.': 'Tutti i ticket risolti e chiusi.',
+  'No completed cases': 'Nessun caso completato',
+  'Completed tickets will appear here.': 'I ticket completati appariranno qui.',
+  'Report an Issue': 'Segnala un problema',
+  'Total Cases': 'Casi totali',
+  'High Urgency': 'Urgenza alta',
+  'My Cases by Status': 'I miei casi per stato',
+  'My Reported Cases': 'I miei casi segnalati',
+  'No tickets reported yet': 'Nessun ticket segnalato',
+  'Forgot Password': 'Password dimenticata',
+  'Reset password': 'Reimposta password',
+  'Back to log in': 'Torna al login',
+  'Email address': 'Indirizzo email',
+  'Send reset link': 'Invia link di reimpostazione',
+  'My Tickets': 'I miei ticket',
+  'All Statuses': 'Tutti gli stati',
+  'You have not reported any issues yet.': 'Non hai ancora segnalato problemi.',
+  'Profile': 'Profilo',
+  'Full Name': 'Nome completo',
+  'Designation': 'Qualifica',
+  'Mobile Number': 'Numero di cellulare',
+  'Territory': 'Territorio',
+  'Add Staff': 'Aggiungi personale',
+  'Active': 'Attivo',
+  'Inactive': 'Inattivo',
+  'Edit': 'Modifica',
+  'Deactivate': 'Disattiva',
+  'Reactivate': 'Riattiva',
+  'Save Changes': 'Salva modifiche',
+  'Cancel': 'Annulla',
+  'Description': 'Descrizione',
+  'Back': 'Indietro',
+  'Go back': 'Torna indietro',
+  'Update Status': 'Aggiorna stato',
+  'Save Status': 'Salva stato',
+  'Add Response': 'Aggiungi risposta',
+  'Post Response': 'Pubblica risposta',
+  'Mark Completed': 'Segna come completato',
+  'Activity Timeline': 'Cronologia attività',
+  'Ticket Created': 'Ticket creato',
+  'Status Updated': 'Stato aggiornato',
+  'Administrator Response': 'Risposta dell’amministratore',
+  'No activity recorded yet.': 'Nessuna attività registrata.',
+  'Created': 'Creato',
+  'Updated': 'Aggiornato',
+  'Notifications': 'Notifiche',
+  'Clear read': 'Cancella lette',
+  'Loading...': 'Caricamento...',
+  'No new notifications': 'Nessuna nuova notifica',
+  'Select category': 'Seleziona categoria',
+  'Select subcategory': 'Seleziona sottocategoria',
+  'Select category first': 'Seleziona prima una categoria',
+  'MSISDN Details': 'Dettagli MSISDN',
+  'Add MSISDN': 'Aggiungi MSISDN',
+  'Access Restricted': 'Accesso limitato',
+  'No staff found': 'Nessun membro del personale trovato',
+  'Submit Report': 'Invia segnalazione',
+  'Submitting...': 'Invio in corso...',
+  'Issue Reported Successfully': 'Problema segnalato con successo',
+  'View My Tickets': 'Visualizza i miei ticket',
+  'Report Another': 'Segnala un altro problema',
+  'Create your account': 'Crea il tuo account',
+  'Sign up to get started': 'Registrati per iniziare',
+  'Create account': 'Crea account',
+  'Already have an account?': 'Hai già un account?',
+  'Log in': 'Accedi',
+  'Verify your email': 'Verifica la tua email',
+  'Verify': 'Verifica',
+  'Resend': 'Invia di nuovo',
+  'Continue with Google': 'Continua con Google',
+  'or': 'oppure',
+  'New password': 'Nuova password',
+  'Request a new link': 'Richiedi un nuovo link',
+  'Invalid reset link': 'Link di reimpostazione non valido',
+  'Ticket ID': 'ID ticket',
+  'Subject': 'Oggetto',
+  'Reported By': 'Segnalato da',
+  'Created': 'Creato',
+  'Actions': 'Azioni',
+  'Tool access requested': 'Accesso agli strumenti richiesto',
+  'Authorize access': 'Autorizza accesso',
+  'Access granted': 'Accesso autorizzato',
+  'Access denied': 'Accesso negato',
+  'Deny': 'Nega',
+  'Approve': 'Approva',
+  'Save': 'Salva',
+  'Search': 'Cerca',
+  'Clear': 'Cancella',
+  'Yes': 'Sì',
+  'No': 'No',
+};
 
 const translations = {
   en: {
@@ -77,10 +201,39 @@ const LanguageContext = createContext(null);
 
 export function LanguageProvider({ children }) {
   const [language, setLanguage] = useState(() => localStorage.getItem(STORAGE_KEY) || 'en');
+  const originalText = useRef(new WeakMap());
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, language);
     document.documentElement.lang = language;
+
+    const translateNode = (node) => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        const source = originalText.current.get(node) ?? node.nodeValue;
+        originalText.current.set(node, source);
+        const translated = language === 'it' ? (pageTextTranslations[source.trim()] || source) : source;
+        if (node.nodeValue !== translated) node.nodeValue = translated;
+      }
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        ['placeholder', 'aria-label', 'title'].forEach((attribute) => {
+          if (node.hasAttribute(attribute)) {
+            const source = node.getAttribute(`data-lmac-${attribute}`) || node.getAttribute(attribute);
+            node.setAttribute(`data-lmac-${attribute}`, source);
+            node.setAttribute(attribute, language === 'it' ? (pageTextTranslations[source] || source) : source);
+          }
+        });
+      }
+    };
+    const translatePage = () => {
+      const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+      let node;
+      while ((node = walker.nextNode())) translateNode(node);
+      document.querySelectorAll('input, textarea, button, [role="button"]').forEach(translateNode);
+    };
+    translatePage();
+    const observer = new MutationObserver(translatePage);
+    observer.observe(document.body, { childList: true, subtree: true, characterData: true });
+    return () => observer.disconnect();
   }, [language]);
 
   const translate = (key, values = {}) => {

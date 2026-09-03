@@ -74,9 +74,6 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-md">
-        <div className="flex justify-end mb-3">
-          <LanguageSwitcher />
-        </div>
         <div className="text-center mb-8">
           <div className="inline-flex items-center justify-center w-40 h-40 mb-2">
             <img src={logo} alt="Lyca Ops" className="w-full h-full object-contain" />
@@ -171,6 +168,9 @@ export default function Login() {
                 </div>
               </form>
             }
+            <div className="flex justify-center mt-5 pt-4 border-t border-foreground/10">
+              <LanguageSwitcher />
+            </div>
           </div>
         </Card>
 
