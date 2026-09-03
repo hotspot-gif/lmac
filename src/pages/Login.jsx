@@ -84,7 +84,7 @@ export default function Login() {
         <Card className="border-0 shadow-xl shadow-foreground/5 rounded-2xl overflow-hidden">
           <div className="bg-foreground px-6 py-4">
             <p className="text-sm font-medium text-[hsl(var(--card))]">
-              {step === 1 ? t('stepIdentify') : t('password')}
+              {step === 1 ? t('stepIdentify') : t('hello', { name: userName })}
             </p>
             <p className="text-white/70 text-xs mt-0.5">
               {step === 1 ? t('enterEmail') : t('enterPassword')}
