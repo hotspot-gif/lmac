@@ -88,6 +88,8 @@ vercel env add VITE_SUPABASE_ANON_KEY
 vercel --prod
 ```
 
+If the deployed app reports that `admin_create_staff(...)` cannot be found, run [`supabase_migration_admin_password.sql`](./supabase_migration_admin_password.sql) in the Supabase SQL Editor. This updates an existing database without rerunning the full schema.
+
 ### Step 5 — Create the remaining staff accounts
 Sign in as an administrator and use **Staff Management** to add users. The administrator chooses each user's initial password. Editing a user's mobile number still resets their password to the new number. Alternatively, add more `seed_staff()` calls at the bottom of `supabase_schema.sql` and re-run them in the SQL editor.
 
