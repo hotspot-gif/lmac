@@ -5,13 +5,16 @@ import { useCustomAuth } from '@/lib/customAuth';
 
 import StatusBadge from '@/components/StatusBadge';
 import { formatDate } from '@/lib/authUtils';
-import { Loader2, Inbox, CheckCircle2 } from 'lucide-react';
+import { CATEGORY_LIST } from '@/lib/categories';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Inbox, CheckCircle2, SlidersHorizontal, X } from 'lucide-react';
 
 export default function CompletedCases() {
   const { isAdmin } = useCustomAuth();
   const navigate = useNavigate();
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [filters, setFilters] = useState({ branch: 'all', category: 'all' });
 
   useEffect(() => {
     if (!isAdmin) {
@@ -32,6 +35,14 @@ export default function CompletedCases() {
     setLoading(false);
   };
 
+  const branches = [...new Set(tickets.map(ticket => ticket.reporter_territory).filter(Boolean))].sort();
+  const filteredTickets = tickets.filter(ticket =>
+    (filters.branch === 'all' || ticket.reporter_territory === filters.branch) &&
+    (filters.category === 'all' || ticket.category === filters.category)
+  );
+  const activeFilterCount = Object.values(filters).filter(value => value !== 'all').length;
+  const clearFilters = () => setFilters({ branch: 'all', category: 'all' });
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -49,7 +60,16 @@ export default function CompletedCases() {
         <p className="text-sm text-foreground/50 mt-1">All resolved and closed tickets.</p>
       </div>
 
-      {tickets.length === 0 ? (
+      <div className="bg-white rounded-2xl border border-foreground/8 p-4 flex flex-wrap items-end gap-3">
+        <div className="flex items-center gap-2 text-sm font-semibold text-foreground mr-2">
+          <SlidersHorizontal className="w-4 h-4" /> Filters
+        </div>
+        <CompletedFilter label="Branch" value={filters.branch} onChange={(value) => setFilters({ ...filters, branch: value })} options={branches} />
+        <CompletedFilter label="Category" value={filters.category} onChange={(value) => setFilters({ ...filters, category: value })} options={CATEGORY_LIST} />
+        {activeFilterCount > 0 && <button onClick={clearFilters} className="flex items-center gap-1 text-sm text-foreground/60 hover:text-foreground"><X className="w-3.5 h-3.5" /> Clear</button>}
+      </div>
+
+      {filteredTickets.length === 0 ? (
         <div className="bg-white rounded-2xl border border-foreground/8 p-10 text-center">
           <Inbox className="w-10 h-10 text-foreground/20 mx-auto mb-3" />
           <p className="text-foreground/50 font-medium">No completed cases</p>
@@ -72,7 +92,7 @@ export default function CompletedCases() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-foreground/5">
-                {tickets.map(t => (
+                {filteredTickets.map(t => (
                   <tr
                     key={t.id}
                     onClick={() => navigate(`/tickets/${t.id}`)}
@@ -92,7 +112,7 @@ export default function CompletedCases() {
             </table>
           </div>
           <div className="lg:hidden divide-y divide-foreground/5">
-            {tickets.map(t => (
+            {filteredTickets.map(t => (
               <div
                 key={t.id}
                 onClick={() => navigate(`/tickets/${t.id}`)}
@@ -110,6 +130,20 @@ export default function CompletedCases() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function CompletedFilter({ label, value, onChange, options }) {
+  return (
+    <div className="min-w-40">
+      <Select value={value} onValueChange={onChange}>
+        <SelectTrigger className="rounded-xl bg-white border-foreground/15 h-10"><SelectValue placeholder={`All ${label}s`} /></SelectTrigger>
+        <SelectContent>
+          <SelectItem value="all">All {label}s</SelectItem>
+          {options.map(option => <SelectItem key={option} value={option}>{option}</SelectItem>)}
+        </SelectContent>
+      </Select>
     </div>
   );
 }
