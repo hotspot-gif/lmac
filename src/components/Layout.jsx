@@ -87,7 +87,7 @@ export default function Layout({ children }) {
             'text-white/70 hover:bg-white/10 hover:text-white'}`
             }>
             
-              <span className="w-6 h-6 rounded-md bg-white flex items-center justify-center flex-shrink-0">
+              <span className="w-6 h-6 rounded-md bg-transparent border border-white flex items-center justify-center flex-shrink-0">
                 <Icon className="w-4 h-4 text-[#08dc7d]" />
               </span>
               {t(item.label)}
