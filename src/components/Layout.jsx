@@ -88,7 +88,7 @@ export default function Layout({ children }) {
             }>
             
               <span className="w-8 h-8 rounded-md bg-transparent border-2 border-white flex items-center justify-center flex-shrink-0">
-                <Icon className="w-6 h-6 text-[#08dc7d]" />
+                <Icon className="w-5 h-5 text-[#08dc7d]" />
               </span>
               {t(item.label)}
             </Link>);
